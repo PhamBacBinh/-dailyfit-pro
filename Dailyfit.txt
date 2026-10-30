@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DailyFit Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#080C14', darkcard: '#111827', darkborder: '#1F293D',
+                        cyanAccent: '#38BDF8', neonGreen: '#34D399', purpleAccent: '#A855F7',
+                        amberAccent: '#F59E0B', roseAccent: '#F43F5E'
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #080C14; color: #F8FAFC; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif; -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="bg-darkbg text-slate-100 min-h-screen pb-24">
+    <div class="max-w-md mx-auto p-4 space-y-4">
+        <header class="flex justify-between items-center bg-darkcard p-4 rounded-2xl border border-darkborder">
+            <div>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">DailyFit Pro</h1>
+                <p class="text-xs text-slate-400">Thể trạng: 1.67m - 78kg</p>
+            </div>
+            <button onclick="openReport()" class="bg-cyan-500/20 text-cyan-400 px-3 py-2 rounded-xl text-xs font-semibold border border-cyan-500/30">
+                <i class="fa-solid fa-chart-line mr-1"></i> Báo cáo
+            </button>
+        </header>
+
+        <div class="bg-darkcard p-4 rounded-2xl border border-darkborder space-y-3">
+            <h2 class="text-sm font-bold text-slate-300"><i class="fa-solid fa-dumbbell mr-2 text-cyan-400"></i>Ghi nhận bài tập</h2>
+            <div id="exerciseList" class="grid grid-cols-1 gap-2"></div>
+        </div>
+
+        <div id="timerCard" class="bg-darkcard p-4 rounded-2xl border border-darkborder hidden space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xs font-bold text-cyan-400" id="activeTimerTitle">ĐỒNG HỒ CHẠY BỘ</h3>
+                <span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded animate-pulse">Live</span>
+            </div>
+            <div class="text-center text-4xl font-mono font-bold text-cyan-400 tracking-wider" id="stopwatchDisplay">00:00</div>
+            <div class="flex gap-2">
+                <button onclick="startStopwatch()" class="flex-1 bg-neonGreen/20 text-neonGreen py-2 rounded-xl text-xs font-bold border border-neonGreen/30">Bắt đầu</button>
+                <button onclick="pauseStopwatch()" class="flex-1 bg-amberAccent/20 text-amberAccent py-2 rounded-xl text-xs font-bold border border-amberAccent/30">Tạm dừng</button>
+                <button onclick="saveStopwatch()" class="flex-1 bg-cyan-500/20 text-cyan-400 py-2 rounded-xl text-xs font-bold border border-cyan-500/30">Lưu kết quả</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-darkcard p-4 rounded-2xl border border-darkborder">
+                <span class="text-xs text-slate-400">Hôm nay</span>
+                <div class="text-xl font-bold text-cyan-400 mt-1" id="todayReps">0 lượt</div>
+                <div class="text-xs text-amber-400 mt-0.5" id="todayCals">0.0 kcal</div>
+            </div>
+            <div class="bg-darkcard p-4 rounded-2xl border border-darkborder">
+                <span class="text-xs text-slate-400">Tích lũy toàn bộ</span>
+                <div class="text-xl font-bold text-neonGreen mt-1" id="totalCals">0 kcal</div>
+                <div class="text-xs text-slate-400 mt-0.5" id="streakCount">Chuỗi: 0 ngày</div>
+            </div>
+        </div>
+
+        <div class="bg-darkcard p-4 rounded-2xl border border-darkborder space-y-2">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xs font-bold text-slate-300">Hiệp Tập Hôm Nay</h3>
+                <button onclick="clearToday()" class="text-xs text-rose-400 hover:underline">Xóa hôm nay</button>
+            </div>
+            <div id="todayHistoryList" class="space-y-2 text-xs"></div>
+        </div>
+    </div>
+
+    <div id="reportModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-darkcard w-full max-w-md p-5 rounded-3xl border border-darkborder space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-cyan-400">Báo Cáo & Xu Hướng Calo</h3>
+                <button onclick="closeReport()" class="text-slate-400 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="bg-darkbg p-3 rounded-2xl border border-darkborder">
+                <canvas id="trendChart" height="200"></canvas>
+            </div>
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-slate-300">Cấu hình Google Sheets Webhook</h4>
+                <input type="text" id="webhookInput" placeholder="Dán Webhook URL vào đây..." class="w-full bg-darkbg border border-darkborder p-2.5 rounded-xl text-xs text-slate-200">
+                <button onclick="syncGoogleSheets()" class="w-full bg-cyan-500 text-darkbg py-2.5 rounded-xl font-bold text-xs">Đồng bộ Google Sheets</button>
+            </div>
+            <button onclick="resetAllData()" class="w-full bg-rose-500/20 text-rose-400 border border-rose-500/30 py-2.5 rounded-xl font-bold text-xs">Xóa toàn bộ dữ liệu & Reset App</button>
+        </div>
+    </div>
+
+    <script>
+        const EXS = {
+            "1": { name: "Chống đẩy (CĐ)", unit: "cái", met: 8.0, timePerRep: 3.0 },
+            "2": { name: "Gập bụng (GB)", unit: "cái", met: 3.8, timePerRep: 2.5 },
+            "3": { name: "Squat (SQ)", unit: "cái", met: 5.0, timePerRep: 3.0 },
+            "4": { name: "Xà đơn (XĐ)", unit: "cái", met: 8.0, timePerRep: 3.5 },
+            "5": { name: "Chạy bộ (CB)", unit: "phút", met: 11.5, timePerRep: 60.0 }
+        };
+        const WEIGHT = 78;
+        let logs = JSON.parse(localStorage.getItem('dailyfit_logs') || '[]');
+        let currentEx = "1";
+        let stopwatchInterval = null, secondsElapsed = 0, isRunning = false;
+
+        function init() { renderExercises(); updateDashboard(); }
+
+        function renderExercises() {
+            const container = document.getElementById('exerciseList');
+            container.innerHTML = Object.keys(EXS).map(k => `
+                <div onclick="selectExercise('${k}')" class="p-3 rounded-xl border ${currentEx === k ? 'border-cyan-500 bg-cyan-500/10' : 'border-darkborder bg-darkbg'} flex justify-between items-center cursor-pointer">
+                    <div>
+                        <div class="font-bold text-sm">${EXS[k].name}</div>
+                        <div class="text-[10px] text-slate-400">Đơn vị: ${EXS[k].unit}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="input_${k}" value="10" onclick="event.stopPropagation()" class="w-16 bg-darkcard border border-darkborder text-center py-1.5 rounded-lg text-xs font-bold text-cyan-400">
+                        <button onclick="event.stopPropagation(); logExercise('${k}')" class="bg-cyan-500 text-darkbg px-3 py-1.5 rounded-lg font-bold text-xs">Lưu</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectExercise(k) {
+            currentEx = k; renderExercises();
+            if(k === "5") {
+                document.getElementById('timerCard').classList.remove('hidden');
+                document.getElementById('activeTimerTitle').innerText = "ĐỒNG HỒ " + EXS[k].name.toUpperCase();
+            } else {
+                document.getElementById('timerCard').classList.add('hidden'); pauseStopwatch();
+            }
+        }
+
+        function calculateCals(code, amount) {
+            const ex = EXS[code];
+            const calPerMin = (ex.met * 3.5 * WEIGHT) / 200;
+            return ex.unit === 'cái' ? calPerMin * (ex.timePerRep / 60.0) * amount : calPerMin * amount;
+        }
+
+        function logExercise(code, customAmount = null) {
+            const amount = customAmount !== null ? customAmount : parseFloat(document.getElementById(`input_${code}`).value) || 0;
+            if(amount <= 0) return;
+            const cals = calculateCals(code, amount);
+            const today = new Date().toISOString().split('T')[0];
+            logs.push({ date: today, code, amount, cals, time: new Date().toLocaleTimeString() });
+            localStorage.setItem('dailyfit_logs', JSON.stringify(logs));
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayLogs = logs.filter(l => l.date === today);
+            const totalReps = todayLogs.reduce((sum, l) => sum + l.amount, 0);
+            const todayCals = todayLogs.reduce((sum, l) => sum + l.cals, 0);
+            const allCals = logs.reduce((sum, l) => sum + l.cals, 0);
+
+            document.getElementById('todayReps').innerText = totalReps + " lượt";
+            document.getElementById('todayCals').innerText = todayCals.toFixed(1) + " kcal";
+            document.getElementById('totalCals').innerText = Math.round(allCals) + " kcal";
+
+            document.getElementById('todayHistoryList').innerHTML = todayLogs.length === 0 ? 
+                '<div class="text-slate-500 text-center py-2">Chưa có hiệp tập hôm nay</div>' :
+                todayLogs.map((l, idx) => `
+                    <div class="flex justify-between items-center bg-darkbg p-2 rounded-lg border border-darkborder">
+                        <div><span class="font-bold text-cyan-400">${EXS[l.code].name}</span>: ${l.amount} ${EXS[l.code].unit} <span class="text-slate-500">(${l.time})</span></div>
+                        <div class="flex items-center gap-2"><span class="text-amber-400">+${l.cals.toFixed(1)} kcal</span><button onclick="deleteLog(${idx})" class="text-rose-400"><i class="fa-solid fa-trash"></i></button></div>
+                    </div>
+                `).join('');
+        }
+
+        function deleteLog(idx) {
+            const today = new Date().toISOString().split('T')[0];
+            let todayIdx = 0;
+            for(let i=0; i<logs.length; i++) {
+                if(logs[i].date === today) {
+                    if(todayIdx === idx) { logs.splice(i, 1); break; }
+                    todayIdx++;
+                }
+            }
+            localStorage.setItem('dailyfit_logs', JSON.stringify(logs));
+            updateDashboard();
+        }
+
+        function clearToday() {
+            if(!confirm("Xóa tất cả hiệp tập hôm nay?")) return;
+            const today = new Date().toISOString().split('T')[0];
+            logs = logs.filter(l => l.date !== today);
+            localStorage.setItem('dailyfit_logs', JSON.stringify(logs));
+            updateDashboard();
+        }
+
+        function startStopwatch() {
+            if(isRunning) return;
+            isRunning = true;
+            if("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
+            stopwatchInterval = setInterval(() => { secondsElapsed++; updateStopwatchDisplay(); }, 1000);
+        }
+
+        function pauseStopwatch() {
+            isRunning = false; clearInterval(stopwatchInterval);
+            if("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+        }
+
+        function saveStopwatch() {
+            const mins = parseFloat((secondsElapsed / 60.0).toFixed(2));
+            if(mins > 0) { logExercise("5", mins); alert("Đã lưu " + mins + " phút chạy bộ!"); }
+            pauseStopwatch(); secondsElapsed = 0; updateStopwatchDisplay();
+        }
+
+        function updateStopwatchDisplay() {
+            const m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const s = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById('stopwatchDisplay').innerText = `${m}:${s}`;
+        }
+
+        let chartInstance = null;
+        function openReport() {
+            document.getElementById('reportModal').classList.remove('hidden');
+            const dates = [...new Set(logs.map(l => l.date))].sort();
+            const calsData = dates.map(d => logs.filter(l => l.date === d).reduce((s, l) => s + l.cals, 0));
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{ label: 'Calo tiêu hao (kcal)', data: calsData, borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.1)', fill: true, tension: 0.4, borderWidth: 3 }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+            document.getElementById('webhookInput').value = localStorage.getItem('dailyfit_webhook') || '';
+        }
+
+        function closeReport() { document.getElementById('reportModal').classList.add('hidden'); }
+
+        function syncGoogleSheets() {
+            const url = document.getElementById('webhookInput').value.trim();
+            if(!url) { alert("Vui lòng nhập Webhook URL!"); return; }
+            localStorage.setItem('dailyfit_webhook', url);
+            fetch(url, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(logs) })
+                .then(() => alert("Đồng bộ dữ liệu thành công!"))
+                .catch(err => alert("Lỗi đồng bộ: " + err));
+        }
+
+        function resetAllData() {
+            if(!confirm("CẢNH BÁO: Xóa toàn bộ dữ liệu và khôi phục cài đặt gốc?")) return;
+            localStorage.clear(); logs = []; updateDashboard(); closeReport(); alert("Đã reset ứng dụng thành công!");
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
