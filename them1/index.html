@@ -175,7 +175,7 @@ let tab='dash',logDate=today(),chartEx=null,chartRange=30,runEx='run',histLimit=
 const draft={};
 const TITLES={dash:'Tổng quan',log:'Ghi nhận',run:'Chạy bộ',hist:'Lịch sử',set:'Cài đặt'};
 function go(t){tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));$('#title').textContent=TITLES[t];render();window.scrollTo(0,0);}
-function render(){$('#view').innerHTML=({dash:vDash,log:vLog,run:vRun,hist:vHist,set:vSet})[tab]();}
+function render(){const nv=$('.tabs');if(nv)nv.style.display=D.profile?'':'none';if(!D.profile){$('#title').textContent='Chào mừng';$('#view').innerHTML=vOnboard();return;}$('#view').innerHTML=({dash:vDash,log:vLog,run:vRun,hist:vHist,set:vSet})[tab]();}
 
 function vDash(){const days=stats(),t=today(),td=days[t]||{ex:{},kcal:0,min:0},vis=D.exercises.filter(e=>!e.hidden);
  let done=0;for(const e of vis){const tg=targetFor(e.id,t,days),v=td.ex[e.id]||0;if(v>0&&(tg==null||v>=tg-1e-9))done++;}
@@ -367,8 +367,9 @@ function exForm(e){const x=e||{name:'',type:'reps',met:5,secPerRep:2,increment:1
  <div class="two"><label class="fld">Giây mỗi lần (loại Số lần)<input type="text" inputmode="decimal" autocomplete="off" step="0.5" id="x-spr" value="${x.secPerRep}"></label><label class="fld">Tăng mỗi buổi (lần hoặc phút)<input type="text" inputmode="decimal" autocomplete="off" step="0.5" id="x-inc" value="${x.increment}"></label></div>
  ${x.intensities?`<p class="muted small">MET theo cường độ: ${Object.entries(x.intensities).map(([k,v])=>k+' '+v).join(', ')}</p>`:''}
  <div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="exSave" data-id="${e?e.id:''}">Lưu bộ môn</button></div>`;}
-function onboard(){openModal(`<h2>Bắt đầu với Thêm 1</h2><p class="muted small">Dùng để tính calo, BMI và BMR. Sửa lại được trong Cài đặt.</p>${profileFields({sex:'nam'},true)}<button class="btn primary full" data-act="onboardSave">Bắt đầu</button>
- <details><summary>Đã có dữ liệu? Khôi phục</summary><label class="fld">GitHub token<input type="password" id="r-tok" autocomplete="off"></label><label class="fld">Gist ID<input id="r-gid" autocomplete="off" autocapitalize="off"></label><button class="btn full" data-act="restoreGist">Khôi phục từ GitHub</button><button class="btn full" data-act="importJSON">Khôi phục từ file JSON</button></details>`,true);}
+function vOnboard(){return `<section class="card"><h2>Bắt đầu với Thêm 1</h2><p class="muted small">Dùng để tính calo, BMI và BMR. Sửa lại được trong Cài đặt.</p>${profileFields({sex:'nam'},true)}<button class="btn primary full" data-act="onboardSave">Bắt đầu</button>
+ <details><summary>Đã có dữ liệu? Khôi phục</summary><label class="fld">GitHub token<input type="password" id="r-tok" autocomplete="off"></label><label class="fld">Gist ID<input id="r-gid" autocomplete="off" autocapitalize="off"></label><button class="btn full" data-act="restoreGist">Khôi phục từ GitHub</button><button class="btn full" data-act="importJSON">Khôi phục từ file JSON</button></details></section>`;}
+function onboard(){render();}
 
 /* ---------- Modal & thông báo ---------- */
 function openModal(html,lock){$('#sheet').innerHTML=html;const m=$('#modal');m.dataset.lock=lock?'1':'';m.classList.remove('hidden');}
@@ -434,9 +435,9 @@ const ACT={
  delWeight:b=>{if(D.weights.length<=1)return toast('Cần giữ ít nhất 1 mốc cân nặng');if(!confirm('Xóa mốc cân nặng này?'))return;delRec('weights',b.dataset.id);save();render();},
  profileSave:()=>{const p=readProfile();if(!p)return;D.profile=p;save();toast('Đã lưu hồ sơ');render();},
  onboardSave:()=>{const p=readProfile();if(!p)return;const w=num($('#p-w').value);if(!(w>=20&&w<=300))return bad('p-w','Nhập cân nặng từ 20 đến 300 kg, ví dụ 77');
-  D.profile=p;D.weights.push({id:uid(),date:today(),kg:w,updatedAt:now()});save();closeModal();render();},
+  D.profile=p;D.weights.push({id:uid(),date:today(),kg:w,updatedAt:now()});save();go('dash');toast('Đã lưu hồ sơ');},
  restoreGist:async()=>{const t=$('#r-tok').value.trim(),g=$('#r-gid').value.trim();if(!t||!g)return toast('Nhập token và Gist ID');
-  localStorage.setItem(TOKKEY,t);localStorage.setItem(GISTKEY,g);await sync(true);if(D.profile){closeModal();render();}},
+  localStorage.setItem(TOKKEY,t);localStorage.setItem(GISTKEY,g);await sync(true);if(D.profile)go('dash');},
  exAdd:()=>openModal(exForm(null)),
  exEdit:b=>openModal(exForm(exById(b.dataset.id))),
  preset:b=>{const p=MET_PRESETS[Number(b.dataset.i)];$('#x-name').value=p[0];$('#x-met').value=p[1];$('#x-type').value=p[2];$('#x-spr').value=p[3]||2;},
@@ -482,7 +483,7 @@ const ON={
  wake:t=>{D.settings.wakeLock=t.checked;D.settings.updatedAt=now();save();const r=runState();t.checked&&r&&!r.pauseAt?wakeOn():wakeOff();},
  import:t=>{const f=t.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{let R;try{R=JSON.parse(rd.result);}catch(e){R=null;}t.value='';
   if(!R||!R.schemaVersion)return toast('File không đúng định dạng của app');if(!confirm('Gộp dữ liệu từ file vào app? Bản ghi mới hơn sẽ được giữ.'))return;
-  merge(R);save();if(D.profile)closeModal();render();toast('Đã nhập dữ liệu');};rd.readAsText(f);}
+  merge(R);save();render();toast('Đã nhập dữ liệu');};rd.readAsText(f);}
 };
 
 /* ---------- Đồng bộ GitHub Gist ---------- */
@@ -521,7 +522,6 @@ setInterval(tick,250);
 load();makeAppleIcon();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
 go(runState()?'run':'dash');
-if(!D.profile)onboard();
 if(localStorage.getItem(TOKKEY))sync(false);
 {const r=runState();if(r&&!r.pauseAt)wakeOn();}
 </script>
