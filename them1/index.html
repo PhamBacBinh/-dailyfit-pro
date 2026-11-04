@@ -128,6 +128,7 @@ const fmtDate=s=>{const d=parseD(s);return ['CN','T2','T3','T4','T5','T6','T7'][
 const mmss=sec=>{sec=Math.max(0,Math.floor(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return (h?h+':'+pad(m):pad(m))+':'+pad(s);};
 const parseSets=s=>String(s).split(/[^0-9]+/).map(Number).filter(n=>n>0);
 const sum=a=>a.reduce((x,y)=>x+y,0);
+const num=v=>parseFloat(String(v==null?'':v).trim().replace(/\s/g,'').replace(',','.'));
 const SCHEMA=3;
 
 const RUN_INT={'Nhẹ':7.0,'Vừa':9.8,'Nhanh':11.5};
@@ -253,14 +254,14 @@ function exCard(e,d,days){const ti=targetInfo(e.id,d,days),tg=ti.v,v=days[d]&&da
   body=`<div class="counter"><button class="btn round" data-act="dec" data-ex="${e.id}" aria-label="Giảm">−</button><b class="num big">${dr.cur}</b><button class="btn round" data-act="inc" data-ex="${e.id}" aria-label="Tăng">+</button><button class="btn" data-act="addSet" data-ex="${e.id}">Thêm hiệp</button></div>
   <div class="chips">${dr.sets.map((s,i)=>`<button class="chip" data-act="rmSet" data-ex="${e.id}" data-i="${i}" aria-label="Xóa hiệp ${s}">${s} ×</button>`).join('')||'<span class="muted small">Chưa thêm hiệp. Bấm Lưu sẽ ghi số đang chọn là 1 hiệp.</span>'}</div>
   <label class="fld">Hoặc nhập nhanh các hiệp<input inputmode="numeric" placeholder="vd 20-18-15" value="${dr.sets.join('-')}" data-on="setsText" data-ex="${e.id}"></label>
-  <label class="fld">Thời gian thực tế (phút, không bắt buộc)<input type="number" inputmode="decimal" min="0" step="0.5" id="dur-${e.id}" placeholder="Tự ước tính ${e.secPerRep} giây/lần"></label>
+  <label class="fld">Thời gian thực tế (phút, không bắt buộc)<input type="text" inputmode="decimal" autocomplete="off" min="0" step="0.5" id="dur-${e.id}" placeholder="Tự ước tính ${e.secPerRep} giây/lần"></label>
   <button class="btn primary full" data-act="saveReps" data-ex="${e.id}">Lưu ${esc(e.name.toLowerCase())}</button>`;}
- else{body=`<div class="two"><label class="fld">Thời gian (phút)<input type="number" inputmode="decimal" min="0" step="0.5" id="min-${e.id}" placeholder="${tg!=null?fmt(tg,1):'15'}"></label>${e.intensities?`<label class="fld">Cường độ<select id="int-${e.id}">${Object.keys(e.intensities).map(k=>`<option ${k==='Vừa'?'selected':''}>${k}</option>`).join('')}</select></label>`:''}</div>
+ else{body=`<div class="two"><label class="fld">Thời gian (phút)<input type="text" inputmode="decimal" autocomplete="off" min="0" step="0.5" id="min-${e.id}" placeholder="${tg!=null?fmt(tg,1):'15'}"></label>${e.intensities?`<label class="fld">Cường độ<select id="int-${e.id}">${Object.keys(e.intensities).map(k=>`<option ${k==='Vừa'?'selected':''}>${k}</option>`).join('')}</select></label>`:''}</div>
   <div class="two"><button class="btn" data-act="toRun" data-ex="${e.id}">Bấm giờ</button><button class="btn primary" data-act="saveTime" data-ex="${e.id}">Lưu</button></div>`;}
  return `<section class="card ex ${ok?'ok':''}" data-card="${e.id}"><div class="row-between"><h2>${esc(e.name)}</h2>${isPR?'<span class="badge pr">Kỷ lục mới</span>':ok?'<span class="badge">Đạt mục tiêu</span>':''}</div>
  <p class="target">${tg==null?'Buổi đầu tiên: đặt mốc của bạn':ti.hold?`Giữ mức: <b class="num">${fv(e,tg)}</b> ${unit(e)} <span class="muted small">(2 buổi gần nhất chưa đạt, chưa tăng)</span>`:`Mục tiêu: <b class="num">${fv(e,tg)}</b> ${unit(e)} <span class="muted">(+${fv(e,e.increment)})</span>`}${v?`<span class="done muted">Đã làm: <b class="num">${fv(e,v)}</b></span>`:''}</p>
  ${logs.length?`<p class="muted small">${logs.map(l=>logText(e,l)).join('; ')}</p>`:''}${body}</section>`;}
-function rerenderCard(id){const el=$(`[data-card="${id}"]`);if(!el)return render();const dur=($('#dur-'+id)||{}).value;el.outerHTML=exCard(exById(id),logDate,stats());if(dur)$('#dur-'+id).value=dur;}
+function rerenderCard(id){const el=$(`[data-card="${id}"]`);if(!el||!el.isConnected||!el.parentNode)return render();const dur=($('#dur-'+id)||{}).value;el.outerHTML=exCard(exById(id),logDate,stats());if(dur)$('#dur-'+id).value=dur;}
 
 /* ---------- Đồng hồ ---------- */
 function runState(){try{return JSON.parse(localStorage.getItem(RUNKEY));}catch(e){return null;}}
@@ -278,13 +279,14 @@ function vRun(){const r=runState(),timeEx=D.exercises.filter(e=>!e.hidden&&e.typ
   <button class="min" data-act="fullHide">Thu nhỏ</button></section>`;}
  const btns={idle:'<button class="btn primary xl-btn" data-act="runStart">Bắt đầu</button>',
   running:'<button class="btn xl-btn" data-act="runPause">Tạm dừng</button><button class="btn danger xl-btn" data-act="runFinish">Kết thúc</button>',
-  paused:'<button class="btn primary xl-btn" data-act="runResume">Tiếp tục</button><button class="btn danger xl-btn" data-act="runFinish">Kết thúc</button>'}[st]+(r&&D.settings.runFull?'<button class="btn" data-act="fullShow">Toàn màn hình</button>':'');
+  paused:'<button class="btn primary xl-btn" data-act="runResume">Tiếp tục</button><button class="btn danger xl-btn" data-act="runFinish">Kết thúc</button>'}[st];
  return `<section class="runner ${st}">
  <select data-on="runEx" ${r?'disabled':''} aria-label="Bộ môn">${timeEx.concat(r&&!timeEx.includes(e)?[e]:[]).map(x=>`<option value="${x.id}" ${x.id===e.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
  <div id="clock" class="num clock" aria-live="off">${mmss(elapsed(r))}</div>
  <p class="target">${tg!=null?`${ti.hold?'Giữ mức hôm nay':'Mục tiêu hôm nay'}: <b class="num">${mmss(tg*60)}</b>`:'Buổi đầu tiên: chạy thoải mái để đặt mốc'}${done?`<br><span class="muted small">Đã ghi hôm nay: ${mmss(done*60)}</span>`:''}</p>
  ${tg!=null?`<div class="bar"><i id="bar" data-tg="${tg}" data-done="${done}" style="width:${Math.min(100,(elapsed(r)/60+done)/tg*100)}%"></i></div>`:''}
  <div class="run-btns">${btns}</div>
+ ${r&&D.settings.runFull?'<button class="btn full" data-act="fullShow">Mở toàn màn hình</button>':''}
  <label class="switch"><input type="checkbox" data-on="wake" ${D.settings.wakeLock?'checked':''}> Giữ màn hình sáng khi đang chạy</label>
  <label class="switch"><input type="checkbox" data-on="sound" ${D.settings.targetSound?'checked':''}> Âm báo khi đạt mục tiêu</label>
  <label class="switch"><input type="checkbox" data-on="runfull" ${D.settings.runFull?'checked':''}> Màn hình chạy toàn màn hình</label>
@@ -328,10 +330,11 @@ function vHist(){const byD={},rs=restSet();for(const l of D.logs)(byD[l.date]=by
   +(ds.length>histLimit?'<button class="btn full" data-act="histMore">Xem thêm</button>':'')+weightHist();}
 function weightHist(){if(!D.weights.length)return '';const ws=[...D.weights].sort((a,b)=>a.date<b.date?1:-1);
  return `<section class="card"><h2>Lịch sử cân nặng</h2><ul class="exlist">${ws.map(w=>`<li><div><b class="num">${fmt(w.kg,1)} kg</b><span class="muted">${fmtDate(w.date)}/${w.date.slice(0,4)}</span></div><span></span><button class="btn sm danger" data-act="delWeight" data-id="${w.id}">Xóa</button></li>`).join('')}</ul></section>`;}
-function profileFields(p,withW){return `<div class="two"><label class="fld">Giới tính<select id="p-sex"><option value="nam" ${p.sex==='nam'?'selected':''}>Nam</option><option value="nu" ${p.sex==='nu'?'selected':''}>Nữ</option></select></label><label class="fld">Năm sinh<input type="number" inputmode="numeric" id="p-by" value="${p.birthYear||''}" placeholder="1990"></label></div>
- <div class="two"><label class="fld">Chiều cao (cm)<input type="number" inputmode="decimal" id="p-h" value="${p.heightCm||''}" placeholder="168"></label>${withW?'<label class="fld">Cân nặng (kg)<input type="number" inputmode="decimal" step="0.1" id="p-w" placeholder="77"></label>':''}</div>`;}
-function readProfile(){const by=Number($('#p-by').value),h=Number($('#p-h').value),y=new Date().getFullYear();
- if(!(by>1920&&by<=y-10)){toast('Năm sinh chưa hợp lệ');return null;}if(!(h>=100&&h<=250)){toast('Chiều cao nhập từ 100 đến 250 cm');return null;}
+function profileFields(p,withW){return `<div class="two"><label class="fld">Giới tính<select id="p-sex"><option value="nam" ${p.sex==='nam'?'selected':''}>Nam</option><option value="nu" ${p.sex==='nu'?'selected':''}>Nữ</option></select></label><label class="fld">Năm sinh<input type="number" inputmode="numeric" id="p-by" value="${p.birthYear||''}" placeholder="VD 1990"></label></div>
+ <div class="two"><label class="fld">Chiều cao (cm)<input type="text" inputmode="decimal" autocomplete="off" id="p-h" value="${p.heightCm||''}" placeholder="VD 168"></label>${withW?'<label class="fld">Cân nặng (kg)<input type="text" inputmode="decimal" autocomplete="off" step="0.1" id="p-w" placeholder="VD 77"></label>':''}</div><p id="perr" class="small" style="color:var(--danger);min-height:1em" role="alert"></p>`;}
+function bad(id,msg){for(const x of ['p-by','p-h','p-w']){const i=$('#'+x);if(i)i.style.borderColor='';}const i=$('#'+id);if(i){i.style.borderColor='var(--danger)';i.focus();}const e=$('#perr');if(e)e.textContent=msg;toast(msg);return null;}
+function readProfile(){const by=Number($('#p-by').value),h=num($('#p-h').value),y=new Date().getFullYear();
+ if(!(by>1920&&by<=y-10))return bad('p-by','Nhập năm sinh, ví dụ 1987');if(!(h>=100&&h<=250))return bad('p-h','Nhập chiều cao từ 100 đến 250 cm, ví dụ 168');
  return {sex:$('#p-sex').value,birthYear:by,heightCm:h,updatedAt:now()};}
 function vSet(){const p=D.profile||{},tok=localStorage.getItem(TOKKEY),gid=localStorage.getItem(GISTKEY)||'',ls=Number(localStorage.getItem(LASTSYNC))||0;
  return `<section class="card"><h2>Hồ sơ</h2>${profileFields(p,false)}<button class="btn primary full" data-act="profileSave">Lưu hồ sơ</button></section>
@@ -360,8 +363,8 @@ function exForm(e){const x=e||{name:'',type:'reps',met:5,secPerRep:2,increment:1
  return `<h2>${e?'Sửa bộ môn':'Thêm bộ môn'}</h2>${e?'':`<p class="muted small">Chọn nhanh, sửa lại được</p><div class="chips">${MET_PRESETS.map((p,i)=>`<button class="chip" data-act="preset" data-i="${i}">${p[0]} (MET ${p[1]})</button>`).join('')}</div>`}
  <label class="fld">Tên bộ môn<input id="x-name" value="${esc(x.name)}"></label>
  <div class="two"><label class="fld">Loại${e?' (không đổi được)':''}<select id="x-type" ${e?'disabled':''}><option value="reps" ${x.type==='reps'?'selected':''}>Số lần</option><option value="time" ${x.type==='time'?'selected':''}>Thời gian</option></select></label>
- <label class="fld">MET<input type="number" inputmode="decimal" step="0.1" id="x-met" value="${x.met}" ${x.intensities?'disabled':''}></label></div>
- <div class="two"><label class="fld">Giây mỗi lần (loại Số lần)<input type="number" inputmode="decimal" step="0.5" id="x-spr" value="${x.secPerRep}"></label><label class="fld">Tăng mỗi buổi (lần hoặc phút)<input type="number" inputmode="decimal" step="0.5" id="x-inc" value="${x.increment}"></label></div>
+ <label class="fld">MET<input type="text" inputmode="decimal" autocomplete="off" step="0.1" id="x-met" value="${x.met}" ${x.intensities?'disabled':''}></label></div>
+ <div class="two"><label class="fld">Giây mỗi lần (loại Số lần)<input type="text" inputmode="decimal" autocomplete="off" step="0.5" id="x-spr" value="${x.secPerRep}"></label><label class="fld">Tăng mỗi buổi (lần hoặc phút)<input type="text" inputmode="decimal" autocomplete="off" step="0.5" id="x-inc" value="${x.increment}"></label></div>
  ${x.intensities?`<p class="muted small">MET theo cường độ: ${Object.entries(x.intensities).map(([k,v])=>k+' '+v).join(', ')}</p>`:''}
  <div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="exSave" data-id="${e?e.id:''}">Lưu bộ môn</button></div>`;}
 function onboard(){openModal(`<h2>Bắt đầu với Thêm 1</h2><p class="muted small">Dùng để tính calo, BMI và BMR. Sửa lại được trong Cài đặt.</p>${profileFields({sex:'nam'},true)}<button class="btn primary full" data-act="onboardSave">Bắt đầu</button>
@@ -391,10 +394,10 @@ const ACT={
  rmSet:b=>{draft[b.dataset.ex].sets.splice(Number(b.dataset.i),1);rerenderCard(b.dataset.ex);},
  saveReps:b=>{const e=exById(b.dataset.ex),dr=draft[e.id],inp=$(`[data-on="setsText"][data-ex="${e.id}"]`);
   if(inp&&inp.value.trim())dr.sets=parseSets(inp.value);if(!dr.sets.length)dr.sets=[dr.cur];
-  const m=parseFloat($('#dur-'+e.id).value),tot=sum(dr.sets);
+  const m=num($('#dur-'+e.id).value),tot=sum(dr.sets);
   commitLog({id:uid(),date:logDate,exerciseId:e.id,sets:[...dr.sets],durationSec:m>0?Math.round(m*60):tot*e.secPerRep,durEst:!(m>0),intensity:null,met:e.met,updatedAt:now()},e);
   dr.sets=[];render();},
- saveTime:b=>{const e=exById(b.dataset.ex),m=parseFloat($('#min-'+e.id).value);if(!(m>0))return toast('Nhập số phút');const it=e.intensities?$('#int-'+e.id).value:null;
+ saveTime:b=>{const e=exById(b.dataset.ex),m=num($('#min-'+e.id).value);if(!(m>0))return toast('Nhập số phút');const it=e.intensities?$('#int-'+e.id).value:null;
   commitLog({id:uid(),date:logDate,exerciseId:e.id,sets:[],durationSec:Math.round(m*60),durEst:false,intensity:it,met:it?e.intensities[it]:e.met,updatedAt:now()},e);render();},
  toRun:b=>{if(!runState())runEx=b.dataset.ex;go('run');},
  runStart:()=>{audioInit();const days=stats(),tg=targetFor(runEx,today(),days),done=days[today()]&&days[today()].ex[runEx]||0;
@@ -414,30 +417,30 @@ const ACT={
  testShortcut:()=>{if(!D.settings.iosTimer)return toast('Bật "Hẹn giờ iPhone" trước');const n=$('#scn');if(n&&n.value.trim()){D.settings.shortcutName=n.value.trim();D.settings.updatedAt=now();save();}openIosTimer(10);},
  editLog:b=>{const l=D.logs.find(x=>x.id===b.dataset.id),e=exById(l.exerciseId);if(!e)return;
   openModal(`<h2>Sửa: ${esc(e.name)}</h2><label class="fld">Ngày<input type="date" id="ed-date" value="${l.date}" max="${today()}"></label>
-  ${e.type==='reps'?`<label class="fld">Các hiệp<input id="ed-sets" inputmode="numeric" value="${l.sets.join('-')}"></label><label class="fld">Thời gian thực tế (phút, không bắt buộc)<input type="number" inputmode="decimal" step="0.5" id="ed-min" value="${l.durEst?'':round1(l.durationSec/60)}"></label>`
-  :`<label class="fld">Thời gian (phút)<input type="number" inputmode="decimal" step="0.1" id="ed-min" value="${round1(l.durationSec/60)}"></label>${e.intensities?`<label class="fld">Cường độ<select id="ed-int">${Object.keys(e.intensities).map(k=>`<option ${k===l.intensity?'selected':''}>${k}</option>`).join('')}</select></label>`:''}`}
+  ${e.type==='reps'?`<label class="fld">Các hiệp<input id="ed-sets" inputmode="numeric" value="${l.sets.join('-')}"></label><label class="fld">Thời gian thực tế (phút, không bắt buộc)<input type="text" inputmode="decimal" autocomplete="off" step="0.5" id="ed-min" value="${l.durEst?'':round1(l.durationSec/60)}"></label>`
+  :`<label class="fld">Thời gian (phút)<input type="text" inputmode="decimal" autocomplete="off" step="0.1" id="ed-min" value="${round1(l.durationSec/60)}"></label>${e.intensities?`<label class="fld">Cường độ<select id="ed-int">${Object.keys(e.intensities).map(k=>`<option ${k===l.intensity?'selected':''}>${k}</option>`).join('')}</select></label>`:''}`}
   <div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="saveEdit" data-id="${l.id}">Lưu thay đổi</button></div>`);},
- saveEdit:b=>{const l=D.logs.find(x=>x.id===b.dataset.id),e=exById(l.exerciseId),m=parseFloat($('#ed-min').value);
+ saveEdit:b=>{const l=D.logs.find(x=>x.id===b.dataset.id),e=exById(l.exerciseId),m=num($('#ed-min').value);
   if(e.type==='reps'){const s=parseSets($('#ed-sets').value);if(!s.length)return toast('Nhập ít nhất 1 hiệp');l.sets=s;l.durEst=!(m>0);l.durationSec=m>0?Math.round(m*60):sum(s)*e.secPerRep;}
   else{if(!(m>0))return toast('Nhập số phút');l.durationSec=Math.round(m*60);if(e.intensities){l.intensity=$('#ed-int').value;l.met=e.intensities[l.intensity];}}
   const d=$('#ed-date').value;if(d&&d<=today())l.date=d;l.updatedAt=now();l.kcal=round1(kcalOf(l));save();closeModal();render();toast('Đã lưu thay đổi');},
  delLog:b=>{if(!confirm('Xóa bản ghi này?'))return;delRec('logs',b.dataset.id);save();render();toast('Đã xóa');},
  histMore:()=>{histLimit+=30;render();},
- weightOpen:()=>openModal(`<h2>Cập nhật cân nặng</h2><div class="two"><label class="fld">Ngày<input type="date" id="w-date" value="${today()}" max="${today()}"></label><label class="fld">Cân nặng (kg)<input type="number" inputmode="decimal" step="0.1" id="w-kg" value="${weightAt(today())||''}"></label></div>
+ weightOpen:()=>openModal(`<h2>Cập nhật cân nặng</h2><div class="two"><label class="fld">Ngày<input type="date" id="w-date" value="${today()}" max="${today()}"></label><label class="fld">Cân nặng (kg)<input type="text" inputmode="decimal" autocomplete="off" step="0.1" id="w-kg" value="${weightAt(today())||''}"></label></div>
   <p class="muted small">Calo từ ngày này trở đi tính theo cân nặng mới. Bản ghi trước đó giữ nguyên.</p><div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="weightSave">Lưu cân nặng</button></div>`),
- weightSave:()=>{const kg=parseFloat($('#w-kg').value),d=$('#w-date').value||today();if(!(kg>=20&&kg<=300))return toast('Cân nặng nhập từ 20 đến 300 kg');
+ weightSave:()=>{const kg=num($('#w-kg').value),d=$('#w-date').value||today();if(!(kg>=20&&kg<=300))return toast('Cân nặng nhập từ 20 đến 300 kg');
   const ex=D.weights.find(w=>w.date===d);if(ex){ex.kg=kg;ex.updatedAt=now();}else D.weights.push({id:uid(),date:d,kg,updatedAt:now()});
   save();closeModal();render();toast('Đã cập nhật '+fmt(kg,1)+' kg từ '+fmtDate(d));},
  delWeight:b=>{if(D.weights.length<=1)return toast('Cần giữ ít nhất 1 mốc cân nặng');if(!confirm('Xóa mốc cân nặng này?'))return;delRec('weights',b.dataset.id);save();render();},
  profileSave:()=>{const p=readProfile();if(!p)return;D.profile=p;save();toast('Đã lưu hồ sơ');render();},
- onboardSave:()=>{const p=readProfile();if(!p)return;const w=parseFloat($('#p-w').value);if(!(w>=20&&w<=300))return toast('Cân nặng nhập từ 20 đến 300 kg');
+ onboardSave:()=>{const p=readProfile();if(!p)return;const w=num($('#p-w').value);if(!(w>=20&&w<=300))return bad('p-w','Nhập cân nặng từ 20 đến 300 kg, ví dụ 77');
   D.profile=p;D.weights.push({id:uid(),date:today(),kg:w,updatedAt:now()});save();closeModal();render();},
  restoreGist:async()=>{const t=$('#r-tok').value.trim(),g=$('#r-gid').value.trim();if(!t||!g)return toast('Nhập token và Gist ID');
   localStorage.setItem(TOKKEY,t);localStorage.setItem(GISTKEY,g);await sync(true);if(D.profile){closeModal();render();}},
  exAdd:()=>openModal(exForm(null)),
  exEdit:b=>openModal(exForm(exById(b.dataset.id))),
  preset:b=>{const p=MET_PRESETS[Number(b.dataset.i)];$('#x-name').value=p[0];$('#x-met').value=p[1];$('#x-type').value=p[2];$('#x-spr').value=p[3]||2;},
- exSave:b=>{const name=$('#x-name').value.trim(),met=parseFloat($('#x-met').value),spr=parseFloat($('#x-spr').value)||0,inc=parseFloat($('#x-inc').value),id=b.dataset.id,e=id&&exById(id);
+ exSave:b=>{const name=$('#x-name').value.trim(),met=num($('#x-met').value),spr=num($('#x-spr').value)||0,inc=num($('#x-inc').value),id=b.dataset.id,e=id&&exById(id);
   if(!name)return toast('Nhập tên bộ môn');if(!(e&&e.intensities)&&!(met>0))return toast('MET phải lớn hơn 0');if(!(inc>0))return toast('Mức tăng phải lớn hơn 0');
   const type=e?e.type:$('#x-type').value;if(type==='reps'&&!(spr>0))return toast('Nhập số giây mỗi lần');
   if(e){e.name=name;if(!e.intensities)e.met=met;e.secPerRep=spr;e.increment=inc;e.updatedAt=now();}
@@ -467,7 +470,7 @@ const ON={
  logDate:t=>{logDate=t.value&&t.value<=today()?t.value:today();render();},
  chartEx:t=>{chartEx=t.value;render();},
  runEx:t=>{runEx=t.value;render();},
- setsText:t=>{draft[t.dataset.ex].sets=parseSets(t.value);rerenderCard(t.dataset.ex);},
+ setsText:t=>{const dr=draft[t.dataset.ex],s=parseSets(t.value);if(!dr||s.join('-')===dr.sets.join('-'))return;dr.sets=s;setTimeout(()=>rerenderCard(t.dataset.ex),0);},
  sound:t=>{D.settings.targetSound=t.checked;D.settings.updatedAt=now();save();if(t.checked){audioInit();beep();}},
  hold:t=>{D.settings.holdRule=t.checked;D.settings.updatedAt=now();save();toast(t.checked?'Đã bật giữ mức':'Đã tắt giữ mức');},
  lock:t=>{D.settings.lockScreen=t.checked;D.settings.updatedAt=now();save();const r=runState();if(t.checked&&r&&!r.pauseAt)lockOn();else if(!t.checked)lockOff();render();},
@@ -516,7 +519,7 @@ window.addEventListener('online',()=>{if(localStorage.getItem(DIRTY))sync(false)
 window.addEventListener('storage',e=>{if(e.key===KEY){load();if(!isEditing())render();}});
 setInterval(tick,250);
 load();makeAppleIcon();
-if('serviceWorker' in navigator){const had=!!navigator.serviceWorker.controller;let rl=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl&&!runState()){rl=true;location.reload();}});navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
 go(runState()?'run':'dash');
 if(!D.profile)onboard();
 if(localStorage.getItem(TOKKEY))sync(false);
