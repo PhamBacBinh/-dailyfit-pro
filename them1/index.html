@@ -84,6 +84,8 @@ details{font-size:14px;display:grid;gap:10px}summary{color:var(--accent);font-we
 #toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:30;max-width:90vw;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 .empty{color:var(--muted);text-align:center;padding:24px 8px}
+.who-wrap{display:grid;justify-items:end;gap:2px}.who{min-height:36px;padding:0 12px;border-radius:999px;border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);font:inherit;font-size:15px;font-weight:600}
+.plist{list-style:none;padding:0;display:grid;gap:8px}.plist li{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px}.plist li.on{border:2px solid var(--accent)}.plist small{display:block;color:var(--muted)}
 .hr{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:2 2}.legend .hr-l{border:1.5px dashed var(--muted);margin-left:8px}
 .mnav{display:grid;grid-template-columns:44px 1fr 44px;gap:8px;align-items:center;text-align:center}.mnav h2{font-size:17px}
 .delta{font-size:12.5px;font-weight:600;display:block}.delta.up{color:var(--accent)}.delta.down{color:var(--danger)}
@@ -96,7 +98,7 @@ details{font-size:14px;display:grid;gap:10px}summary{color:var(--accent);font-we
 </style>
 </head>
 <body>
-<header class="top"><h1 id="title">Tổng quan</h1><span id="syncBadge"></span></header>
+<header class="top"><h1 id="title">Tổng quan</h1><div class="who-wrap"><button class="who" id="who" data-act="personOpen" aria-label="Đổi người"></button><span id="syncBadge"></span></div></header>
 <main id="view"></main>
 <nav class="tabs">
 <button data-act="tab" data-tab="dash"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Tổng quan</button>
@@ -111,7 +113,7 @@ details{font-size:14px;display:grid;gap:10px}summary{color:var(--accent);font-we
 <script>
 'use strict';
 const $=(s,r=document)=>r.querySelector(s);
-const KEY='ft_data',RUNKEY='ft_run',TOKKEY='ft_token',GISTKEY='ft_gist',DIRTY='ft_dirty',LASTSYNC='ft_lastsync',GFILE='them1-data.json';
+const KEY='ft_data',ACTKEY='ft_active',RUNKEY0='ft_run',TOKKEY='ft_token',GISTKEY='ft_gist',DIRTY='ft_dirty',LASTSYNC='ft_lastsync',GFILE='them1-data.json';
 const now=()=>Date.now();
 const uid=()=>now().toString(36)+Math.random().toString(36).slice(2,7);
 const pad=n=>String(n).padStart(2,'0');
@@ -142,19 +144,32 @@ function defaults(){return {schemaVersion:SCHEMA,profile:null,weights:[],rests:[
   {id:'pullup',name:'Lên xà',type:'reps',met:8.0,secPerRep:3,increment:1,hidden:false,updatedAt:0},
   {id:'run',name:'Chạy bộ',type:'time',met:9.8,secPerRep:0,increment:1,hidden:false,intensities:RUN_INT,updatedAt:0}],
  logs:[],deleted:[],settings:{weeklyGoalMin:150,wakeLock:true,targetSound:true,holdRule:true,reminderTime:'19:00',lockScreen:false,iosTimer:true,shortcutName:'Bắt đầu hẹn giờ',runFull:true,firstTimerMin:30,updatedAt:0}};}
-function load(){try{D=JSON.parse(localStorage.getItem(KEY));}catch(e){D=null;}if(!D||!D.schemaVersion)D=defaults();migrate();}
+let ROOT,ACTIVE;
+const NAME_PRESETS=['Bố','Mẹ','Con trai','Con gái','Con 1','Con 2','Con 3','Anh','Chị','Em'];
+function newPerson(name){const p=defaults();p.name=name;p.nameAt=now();return p;}
+function wrapRoot(single){return {rootVersion:1,people:{p1:Object.assign(single,{name:single.name||'Bố',nameAt:single.nameAt||0})},deletedPeople:{}};}
+function usePerson(id){if(!ROOT.people[id])id=Object.keys(ROOT.people)[0];ACTIVE=id;try{localStorage.setItem(ACTKEY,id);}catch(e){}D=ROOT.people[id];migrate();}
+function load(){let x;try{x=JSON.parse(localStorage.getItem(KEY));}catch(e){x=null;}
+ if(x&&x.people)ROOT=x;else if(x&&x.schemaVersion)ROOT=wrapRoot(x);else ROOT={rootVersion:1,people:{p1:newPerson('Bố')},deletedPeople:{}};
+ if(!ROOT.deletedPeople)ROOT.deletedPeople={};
+ for(const id in ROOT.people){D=ROOT.people[id];if(!D.name)D.name='Người '+id;migrate();}
+ const old=localStorage.getItem(RUNKEY0);if(old){try{localStorage.setItem(RUNKEY0+'_p1',old);localStorage.removeItem(RUNKEY0);}catch(e){}}
+ usePerson(localStorage.getItem(ACTKEY)||'p1');}
+const runKey=()=>RUNKEY0+'_'+ACTIVE;
 function migrate(){const d=defaults();for(const k of ['weights','exercises','logs','deleted','rests'])if(!Array.isArray(D[k]))D[k]=d[k];if(!D.settings)D.settings=d.settings;
  /* v1 → v2: thêm ngày nghỉ, âm báo, quy tắc giữ mức, giờ nhắc */
  if((D.schemaVersion||1)<3){/* v3: khung Đang phát làm dừng nhạc → tắt; bật Hẹn giờ iPhone + màn hình chạy toàn màn hình */D.settings.lockScreen=false;D.settings.iosTimer=true;}
  for(const k in d.settings)if(D.settings[k]===undefined)D.settings[k]=d.settings[k];if(D.settings.shortcutName==='Them1 Hen gio')D.settings.shortcutName='Bắt đầu hẹn giờ';D.schemaVersion=SCHEMA;}
-function save(sync=true){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){toast('Bộ nhớ máy đầy. Hãy xuất file sao lưu.');}if(sync&&localStorage.getItem(TOKKEY)){localStorage.setItem(DIRTY,'1');scheduleSync();}}
+function save(sync=true){try{localStorage.setItem(KEY,JSON.stringify(ROOT));}catch(e){toast('Bộ nhớ máy đầy. Hãy xuất file sao lưu.');}if(sync&&localStorage.getItem(TOKKEY)){localStorage.setItem(DIRTY,'1');scheduleSync();}}
 const exById=id=>D.exercises.find(e=>e.id===id);
 const unit=e=>e.type==='reps'?'lần':'phút';
 const fv=(e,v)=>e.type==='reps'?fmt(v):fmt(v,1);
 function weightAt(date){let w=null;for(const x of D.weights)if(x.date<=date&&(!w||x.date>w.date))w=x;if(!w)for(const x of D.weights)if(!w||x.date<w.date)w=x;return w?w.kg:null;}
 function kcalOf(l){return (l.met||0)*3.5*(weightAt(l.date)||0)/200*(l.durationSec/60);}
 function value(l){const e=exById(l.exerciseId);return e&&e.type==='reps'?sum(l.sets||[]):l.durationSec/60;}
-function bmr(){const p=D.profile,w=weightAt(today());if(!p||!w)return 0;const age=new Date().getFullYear()-p.birthYear;return 10*w+6.25*p.heightCm-5*age+(p.sex==='nam'?5:-161);}
+const ageOf=p=>p?new Date().getFullYear()-p.birthYear:0;
+function bmr(){const p=D.profile,w=weightAt(today());if(!p||!w)return 0;const age=ageOf(p),m=p.sex==='nam';
+ if(age<10)return m?22.706*w+504.3:20.315*w+485.9;if(age<18)return m?17.686*w+658.2:13.384*w+692.6;return 10*w+6.25*p.heightCm-5*age+(p.sex==='nam'?5:-161);}
 function stats(){const days={};for(const l of D.logs){const d=days[l.date]||(days[l.date]={ex:{},kcal:0,min:0});d.ex[l.exerciseId]=(d.ex[l.exerciseId]||0)+value(l);d.kcal+=kcalOf(l);d.min+=l.durationSec/60;}return days;}
 const PC=new WeakMap();
 function nextTarget(prev,e){const n=prev.length;if(!n)return {v:null,hold:false};const a=prev[n-1],b=prev[n-2],hold=!!(D.settings.holdRule&&b&&a.miss&&b.miss);return {v:hold?a.v:a.v+e.increment,hold};}
@@ -175,7 +190,7 @@ let tab='dash',logDate=today(),chartEx=null,chartRange=30,runEx='run',histLimit=
 const draft={};
 const TITLES={dash:'Tổng quan',log:'Ghi nhận',run:'Chạy bộ',hist:'Lịch sử',set:'Cài đặt'};
 function go(t){tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));$('#title').textContent=TITLES[t];render();window.scrollTo(0,0);}
-function render(){const nv=$('.tabs');if(nv)nv.style.display=D.profile?'':'none';if(!D.profile){$('#title').textContent='Chào mừng';$('#view').innerHTML=vOnboard();return;}$('#view').innerHTML=({dash:vDash,log:vLog,run:vRun,hist:vHist,set:vSet})[tab]();}
+function render(){const wb=$('#who');if(wb)wb.textContent=(D.name||'Hồ sơ')+' ▾';const nv=$('.tabs');if(nv)nv.style.display=D.profile?'':'none';if(!D.profile){$('#title').textContent='Chào mừng';$('#view').innerHTML=vOnboard();return;}$('#view').innerHTML=({dash:vDash,log:vLog,run:vRun,hist:vHist,set:vSet})[tab]();}
 
 function vDash(){const days=stats(),t=today(),td=days[t]||{ex:{},kcal:0,min:0},vis=D.exercises.filter(e=>!e.hidden);
  let done=0;for(const e of vis){const tg=targetFor(e.id,t,days),v=td.ex[e.id]||0;if(v>0&&(tg==null||v>=tg-1e-9))done++;}
@@ -224,10 +239,10 @@ function prList(days,vis){if(!vis.length)return '<p class="muted">Chưa có bộ
   return md?`<li><span>${esc(e.name)}</span><b class="num">${fv(e,m)} ${unit(e)}</b><small>${fmtDate(md)}</small></li>`:`<li><span>${esc(e.name)}</span><small>Chưa có</small></li>`;}).join('')}</ul>`;}
 
 function weightCard(){const w=weightAt(today()),p=D.profile;if(!w||!p)return '';const h=p.heightCm/100,bmi=w/(h*h);
- const cls=bmi<18.5?'Thiếu cân':bmi<23?'Bình thường':bmi<25?'Thừa cân':'Béo phì';
+ const kid=ageOf(p)<18,cls=kid?'Trẻ em: đánh giá theo biểu đồ tuổi':bmi<18.5?'Thiếu cân':bmi<23?'Bình thường':bmi<25?'Thừa cân':'Béo phì';
  const ws=[...D.weights].sort((a,b)=>a.date<b.date?-1:1),f=ws[0].date,n=dayDiff(f,today())+1;
  return `<section class="card"><div class="row-between"><h2>Cân nặng</h2><button class="btn sm" data-act="weightOpen">Cập nhật</button></div>
- <div class="stats3"><div><b class="num">${fmt(w,1)}</b><span>kg</span></div><div><b class="num">${fmt(bmi,1)}</b><span>BMI, chuẩn châu Á</span><em class="tag">${cls}</em></div><div><b class="num">${fmt(bmr())}</b><span>BMR kcal/ngày</span></div></div>
+ <div class="stats3"><div><b class="num">${fmt(w,1)}</b><span>kg</span></div><div><b class="num">${fmt(bmi,1)}</b><span>${kid?'BMI':'BMI, chuẩn châu Á'}</span><em class="tag">${cls}</em></div><div><b class="num">${fmt(bmr())}</b><span>BMR kcal/ngày</span></div></div>
  ${ws.length>1?chart([{pts:ws.map(x=>[dayDiff(f,x.date),x.kg]),cls:'val',dots:true}],{n:Math.max(n,2),x0:fmtDate(f),x1:'Hôm nay',dec:1}):'<p class="muted small">Cập nhật cân nặng định kỳ để xem xu hướng.</p>'}</section>`;}
 
 function monthStats(ym,days){const [y,m]=ym.split('-').map(Number),s=ym+'-01',e=ymd(new Date(y,m,0));let k=0,mi=0,ad=0;const per={};
@@ -264,8 +279,8 @@ function exCard(e,d,days){const ti=targetInfo(e.id,d,days),tg=ti.v,v=days[d]&&da
 function rerenderCard(id){const el=$(`[data-card="${id}"]`);if(!el||!el.isConnected||!el.parentNode)return render();const dur=($('#dur-'+id)||{}).value;el.outerHTML=exCard(exById(id),logDate,stats());if(dur)$('#dur-'+id).value=dur;}
 
 /* ---------- Đồng hồ ---------- */
-function runState(){try{return JSON.parse(localStorage.getItem(RUNKEY));}catch(e){return null;}}
-function setRun(r){r?localStorage.setItem(RUNKEY,JSON.stringify(r)):localStorage.removeItem(RUNKEY);}
+function runState(){try{return JSON.parse(localStorage.getItem(runKey()));}catch(e){return null;}}
+function setRun(r){r?localStorage.setItem(runKey(),JSON.stringify(r)):localStorage.removeItem(runKey());}
 function elapsed(r){return r?((r.pauseAt||now())-r.startAt-r.pausedMs)/1000:0;}
 function vRun(){const r=runState(),timeEx=D.exercises.filter(e=>!e.hidden&&e.type==='time');
  if(r)runEx=r.exId;const cur=exById(runEx);if(!r&&(!cur||cur.type!=='time'||cur.hidden))runEx=timeEx[0]&&timeEx[0].id;
@@ -331,13 +346,13 @@ function vHist(){const byD={},rs=restSet();for(const l of D.logs)(byD[l.date]=by
 function weightHist(){if(!D.weights.length)return '';const ws=[...D.weights].sort((a,b)=>a.date<b.date?1:-1);
  return `<section class="card"><h2>Lịch sử cân nặng</h2><ul class="exlist">${ws.map(w=>`<li><div><b class="num">${fmt(w.kg,1)} kg</b><span class="muted">${fmtDate(w.date)}/${w.date.slice(0,4)}</span></div><span></span><button class="btn sm danger" data-act="delWeight" data-id="${w.id}">Xóa</button></li>`).join('')}</ul></section>`;}
 function opts(a,b,step,sel,dec){let s='';const n=Math.round((b-a)/step);for(let i=0;i<=n;i++){const v=+(a+i*step).toFixed(dec);s+=`<option value="${v}" ${Math.abs(v-sel)<1e-9?'selected':''}>${fmt(v,dec)}</option>`;}return s;}
-function kgOpts(sel){return opts(30,200,0.1,Math.round((sel||70)*10)/10,1);}
+function kgOpts(sel){return opts(10,200,0.1,Math.round((sel||70)*10)/10,1);}
 function profileFields(p,withW){const y=new Date().getFullYear();
- return `<div class="two"><label class="fld">Giới tính<select id="p-sex"><option value="nam" ${p.sex==='nam'?'selected':''}>Nam</option><option value="nu" ${p.sex==='nu'?'selected':''}>Nữ</option></select></label><label class="fld">Năm sinh<select id="p-by">${opts(1940,y-10,1,p.birthYear||1990,0).replace(/(\d)\.(\d{3})</g,'$1$2<')}</select></label></div>
- <div class="two"><label class="fld">Chiều cao (cm)<select id="p-h">${opts(120,220,1,p.heightCm||168,0)}</select></label>${withW?`<label class="fld">Cân nặng (kg)<select id="p-w">${kgOpts(70)}</select></label>`:''}</div><p id="perr" class="small" style="color:var(--danger);min-height:1em" role="alert"></p>`;}
+ return `<div class="two"><label class="fld">Giới tính<select id="p-sex"><option value="nam" ${p.sex==='nam'?'selected':''}>Nam</option><option value="nu" ${p.sex==='nu'?'selected':''}>Nữ</option></select></label><label class="fld">Năm sinh<select id="p-by">${opts(1940,y-4,1,p.birthYear||1990,0).replace(/(\d)\.(\d{3})</g,'$1$2<')}</select></label></div>
+ <div class="two"><label class="fld">Chiều cao (cm)<select id="p-h">${opts(80,220,1,p.heightCm||168,0)}</select></label>${withW?`<label class="fld">Cân nặng (kg)<select id="p-w">${kgOpts(70)}</select></label>`:''}</div><p id="perr" class="small" style="color:var(--danger);min-height:1em" role="alert"></p>`;}
 function bad(id,msg){for(const x of ['p-by','p-h','p-w']){const i=$('#'+x);if(i)i.style.borderColor='';}const i=$('#'+id);if(i){i.style.borderColor='var(--danger)';i.focus();}const e=$('#perr');if(e)e.textContent=msg;toast(msg);return null;}
 function readProfile(){const by=Number($('#p-by').value),h=num($('#p-h').value),y=new Date().getFullYear();
- if(!(by>1920&&by<=y-10))return bad('p-by','Nhập năm sinh, ví dụ 1987');if(!(h>=100&&h<=250))return bad('p-h','Nhập chiều cao từ 100 đến 250 cm, ví dụ 168');
+ if(!(by>1920&&by<=y-4))return bad('p-by','Nhập năm sinh, ví dụ 1987');if(!(h>=80&&h<=250))return bad('p-h','Nhập chiều cao từ 100 đến 250 cm, ví dụ 168');
  return {sex:$('#p-sex').value,birthYear:by,heightCm:h,updatedAt:now()};}
 function vSet(){const p=D.profile||{},tok=localStorage.getItem(TOKKEY),gid=localStorage.getItem(GISTKEY)||'',ls=Number(localStorage.getItem(LASTSYNC))||0;
  return `<section class="card"><h2>Hồ sơ</h2>${profileFields(p,false)}<button class="btn primary full" data-act="profileSave">Lưu hồ sơ</button></section>
@@ -370,7 +385,7 @@ function exForm(e){const x=e||{name:'',type:'reps',met:5,secPerRep:2,increment:1
  <div class="two"><label class="fld">Giây mỗi lần (loại Số lần)<select id="x-spr">${opts(0.5,10,0.5,x.secPerRep||2,1)}</select></label><label class="fld">Tăng mỗi buổi (lần hoặc phút)<select id="x-inc">${opts(0.5,10,0.5,x.increment,1)}</select></label></div>
  ${x.intensities?`<p class="muted small">MET theo cường độ: ${Object.entries(x.intensities).map(([k,v])=>k+' '+v).join(', ')}</p>`:''}
  <div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="exSave" data-id="${e?e.id:''}">Lưu bộ môn</button></div>`;}
-function vOnboard(){return `<section class="card"><h2>Bắt đầu với Thêm 1</h2><p class="muted small">Dùng để tính calo, BMI và BMR. Sửa lại được trong Cài đặt.</p>${profileFields({sex:'nam'},true)}<button class="btn primary full" data-act="onboardSave">Bắt đầu</button>
+function vOnboard(){return `<section class="card"><h2>Hồ sơ của ${esc(D.name||'bạn')}</h2><p class="muted small">Dùng để tính calo, BMI và BMR. Sửa lại được trong Cài đặt.</p>${profileFields({sex:'nam'},true)}<button class="btn primary full" data-act="onboardSave">Bắt đầu</button>
  <details><summary>Đã có dữ liệu? Khôi phục</summary><label class="fld">GitHub token<input type="password" id="r-tok" autocomplete="off"></label><label class="fld">Gist ID<input id="r-gid" autocomplete="off" autocapitalize="off"></label><button class="btn full" data-act="restoreGist">Khôi phục từ GitHub</button><button class="btn full" data-act="importJSON">Khôi phục từ file JSON</button></details></section>`;}
 function onboard(){render();}
 
@@ -428,6 +443,14 @@ const ACT={
   if(e.type==='reps'){const s=[...document.querySelectorAll('.ed-set')].map(x=>Number(x.value)).filter(n=>n>0);if(!s.length)return toast('Nhập ít nhất 1 hiệp');l.sets=s;l.durEst=!(m>0);l.durationSec=m>0?Math.round(m*60):sum(s)*e.secPerRep;}
   else{if(!(m>0))return toast('Nhập số phút');l.durationSec=Math.round(m*60);if(e.intensities){l.intensity=$('#ed-int').value;l.met=e.intensities[l.intensity];}}
   const d=$('#ed-date').value;if(d&&d<=today())l.date=d;l.updatedAt=now();l.kcal=round1(kcalOf(l));save();closeModal();render();toast('Đã lưu thay đổi');},
+ personOpen:()=>{const ids=Object.keys(ROOT.people);openModal(`<h2>Chọn người tập</h2><ul class="plist">${ids.map(id=>{const p=ROOT.people[id],n=p.logs.length;return `<li class="${id===ACTIVE?'on':''}"><div><b>${esc(p.name)}</b><small>${p.profile?(ageOf(p.profile)+' tuổi, '):'Chưa nhập hồ sơ, '}${n} buổi tập</small></div>${id===ACTIVE?'<span class="badge">Đang dùng</span>':`<button class="btn sm primary" data-act="personPick" data-id="${id}">Chọn</button>`}</li>`;}).join('')}</ul>
+  <button class="btn full" data-act="personAddOpen">Thêm người</button><div class="two"><button class="btn" data-act="personRenameOpen">Đổi tên ${esc(D.name)}</button><button class="btn danger" data-act="personDel" ${ids.length<2?'disabled':''}>Xóa ${esc(D.name)}</button></div>`);},
+ personPick:b=>{usePerson(b.dataset.id);for(const k in draft)delete draft[k];chartEx=null;logDate=today();closeModal();go('dash');toast('Đang dùng hồ sơ: '+D.name);},
+ personAddOpen:()=>openModal(`<h2>Thêm người tập</h2><label class="fld">Tên<select id="pn-sel">${NAME_PRESETS.filter(n=>!Object.values(ROOT.people).some(p=>p.name===n)).map(n=>`<option>${n}</option>`).join('')}</select></label><input id="pn-txt" type="hidden"><button class="btn full" data-act="askText" data-target="#pn-txt" data-label="Tên người tập">Gõ tên khác</button><div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="personAdd">Thêm và nhập hồ sơ</button></div>`),
+ personAdd:()=>{const name=($('#pn-txt').value||'').trim()||$('#pn-sel').value;if(!name)return toast('Chọn tên');let i=1;while(ROOT.people['p'+i]||ROOT.deletedPeople['p'+i])i++;const id='p'+i;ROOT.people[id]=newPerson(name);save();usePerson(id);for(const k in draft)delete draft[k];chartEx=null;closeModal();render();toast('Đã thêm '+name+'. Nhập hồ sơ để bắt đầu');},
+ personRenameOpen:()=>openModal(`<h2>Đổi tên ${esc(D.name)}</h2><label class="fld">Tên mới<select id="pn-sel">${NAME_PRESETS.map(n=>`<option ${n===D.name?'selected':''}>${n}</option>`).join('')}</select></label><input id="pn-txt" type="hidden"><button class="btn full" data-act="askText" data-target="#pn-txt" data-label="Tên mới">Gõ tên khác</button><div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="personRename">Lưu tên</button></div>`),
+ personRename:()=>{const name=($('#pn-txt').value||'').trim()||$('#pn-sel').value;D.name=name;D.nameAt=now();save();closeModal();render();toast('Đã đổi tên thành '+name);},
+ personDel:()=>{const ids=Object.keys(ROOT.people);if(ids.length<2)return toast('Cần giữ ít nhất 1 người');if(!confirm('Xóa toàn bộ dữ liệu của '+D.name+'? Không khôi phục được.'))return;if(!confirm('Xác nhận lần nữa: xóa hồ sơ '+D.name+'?'))return;const id=ACTIVE,nm=D.name;ROOT.deletedPeople[id]=now();delete ROOT.people[id];localStorage.removeItem(runKey());usePerson(Object.keys(ROOT.people)[0]);save();closeModal();go('dash');toast('Đã xóa hồ sơ '+nm);},
  askText:b=>{const i=$(b.dataset.target);if(!i)return;const v=prompt(b.dataset.label||'Nhập',i.value||'');if(v==null)return;i.value=v.trim();i.dispatchEvent(new Event('change',{bubbles:true}));if(v.trim())toast('Đã nhập: '+v.trim());},
  edAddSet:()=>{const c=$('#ed-sets'),last=[...c.querySelectorAll('.ed-set')].pop();c.insertAdjacentHTML('beforeend',`<select class="ed-set" style="width:auto">${opts(1,300,1,last?Number(last.value):10,0)}</select>`);},
  edRmSet:()=>{const a=[...document.querySelectorAll('.ed-set')];if(a.length>1)a.pop().remove();else toast('Cần ít nhất 1 hiệp');},
@@ -435,12 +458,12 @@ const ACT={
  histMore:()=>{histLimit+=30;render();},
  weightOpen:()=>openModal(`<h2>Cập nhật cân nặng</h2><div class="two"><label class="fld">Ngày<input type="date" id="w-date" value="${today()}" max="${today()}"></label><label class="fld">Cân nặng (kg)<select id="w-kg">${kgOpts(weightAt(today())||70)}</select></label></div>
   <p class="muted small">Calo từ ngày này trở đi tính theo cân nặng mới. Bản ghi trước đó giữ nguyên.</p><div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="weightSave">Lưu cân nặng</button></div>`),
- weightSave:()=>{const kg=num($('#w-kg').value),d=$('#w-date').value||today();if(!(kg>=20&&kg<=300))return toast('Cân nặng nhập từ 20 đến 300 kg');
+ weightSave:()=>{const kg=num($('#w-kg').value),d=$('#w-date').value||today();if(!(kg>=10&&kg<=300))return toast('Chọn cân nặng');
   const ex=D.weights.find(w=>w.date===d);if(ex){ex.kg=kg;ex.updatedAt=now();}else D.weights.push({id:uid(),date:d,kg,updatedAt:now()});
   save();closeModal();render();toast('Đã cập nhật '+fmt(kg,1)+' kg từ '+fmtDate(d));},
  delWeight:b=>{if(D.weights.length<=1)return toast('Cần giữ ít nhất 1 mốc cân nặng');if(!confirm('Xóa mốc cân nặng này?'))return;delRec('weights',b.dataset.id);save();render();},
  profileSave:()=>{const p=readProfile();if(!p)return;D.profile=p;save();toast('Đã lưu hồ sơ');render();},
- onboardSave:()=>{const p=readProfile();if(!p)return;const w=num($('#p-w').value);if(!(w>=20&&w<=300))return bad('p-w','Nhập cân nặng từ 20 đến 300 kg, ví dụ 77');
+ onboardSave:()=>{const p=readProfile();if(!p)return;const w=num($('#p-w').value);if(!(w>=10&&w<=300))return bad('p-w','Chọn cân nặng');
   D.profile=p;D.weights.push({id:uid(),date:today(),kg:w,updatedAt:now()});save();go('dash');toast('Đã lưu hồ sơ');},
  restoreGist:async()=>{const t=$('#r-tok').value.trim(),g=$('#r-gid').value.trim();if(!t||!g)return toast('Nhập token và Gist ID');
   localStorage.setItem(TOKKEY,t);localStorage.setItem(GISTKEY,g);await sync(true);if(D.profile)go('dash');},
@@ -458,7 +481,7 @@ const ACT={
  tokenSave:()=>{const t=$('#tok').value.trim().replace(/\s/g,''),g=$('#gid').value.trim();if(t)localStorage.setItem(TOKKEY,t);g?localStorage.setItem(GISTKEY,g):localStorage.removeItem(GISTKEY);toast('Đã lưu cài đặt đồng bộ');render();},
  syncNow:()=>{const t=$('#tok'),g=$('#gid');if(t&&t.value.trim())localStorage.setItem(TOKKEY,t.value.trim());if(g&&g.value.trim())localStorage.setItem(GISTKEY,g.value.trim());sync(true).then(()=>{if(tab==='set'&&!isEditing())render();});},
  tokenClear:()=>{if(!confirm('Xóa token khỏi máy này?'))return;localStorage.removeItem(TOKKEY);render();},
- exportJSON:()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(D,null,1)],{type:'application/json'}));a.download='them1-'+today()+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);},
+ exportJSON:()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(ROOT,null,1)],{type:'application/json'}));a.download='them1-'+today()+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);},
  importJSON:()=>$('#file').click(),
  monthShift:b=>{const [y,m]=repMonth.split('-').map(Number),n=ymd(new Date(y,m-1+Number(b.dataset.n),1)).slice(0,7);if(n<=today().slice(0,7))repMonth=n;render();},
  restToggle:b=>{const d=b.dataset.date,ex=D.rests.find(r=>r.date===d);
@@ -488,8 +511,8 @@ const ON={
  remTime:t=>{if(t.value){D.settings.reminderTime=t.value;D.settings.updatedAt=now();save();}},
  wake:t=>{D.settings.wakeLock=t.checked;D.settings.updatedAt=now();save();const r=runState();t.checked&&r&&!r.pauseAt?wakeOn():wakeOff();},
  import:t=>{const f=t.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{let R;try{R=JSON.parse(rd.result);}catch(e){R=null;}t.value='';
-  if(!R||!R.schemaVersion)return toast('File không đúng định dạng của app');if(!confirm('Gộp dữ liệu từ file vào app? Bản ghi mới hơn sẽ được giữ.'))return;
-  merge(R);save();render();toast('Đã nhập dữ liệu');};rd.readAsText(f);}
+  if(!R||!(R.schemaVersion||R.people))return toast('File không đúng định dạng của app');if(!confirm('Gộp dữ liệu từ file vào app? Bản ghi mới hơn sẽ được giữ.'))return;
+  mergeRoot(R);save();render();toast('Đã nhập dữ liệu');};rd.readAsText(f);}
 };
 
 /* ---------- Đồng bộ GitHub Gist ---------- */
@@ -499,6 +522,13 @@ function merge(R){if(!R||!R.schemaVersion)return;if(!Array.isArray(D.rests))D.re
  for(const k of ['weights','exercises','logs','rests']){const m={};for(const x of [...D[k],...(R[k]||[])]){const o=m[x.id];if(!o||(x.updatedAt||0)>(o.updatedAt||0))m[x.id]=x;}
   D[k]=Object.values(m).filter(x=>!(tomb[x.id]>=(x.updatedAt||0)));}
  for(const k of ['profile','settings'])if(R[k]&&(!D[k]||(R[k].updatedAt||0)>(D[k].updatedAt||0)))D[k]=R[k];migrate();}
+function mergeRoot(X){if(!X)return;if(!X.people){if(!X.schemaVersion)return;X={people:{p1:X},deletedPeople:{}};}
+ const dp=Object.assign({},ROOT.deletedPeople||{});for(const id in (X.deletedPeople||{}))if(!(dp[id]>=X.deletedPeople[id]))dp[id]=X.deletedPeople[id];ROOT.deletedPeople=dp;
+ const keep=ACTIVE;
+ for(const id in X.people){if(dp[id]&&!ROOT.people[id])continue;const src=X.people[id];if(!ROOT.people[id]){ROOT.people[id]=src;D=src;migrate();continue;}
+  D=ROOT.people[id];const nm=D.name,na=D.nameAt||0;merge(src);if((src.nameAt||0)>na){D.name=src.name;D.nameAt=src.nameAt;}else{D.name=nm;D.nameAt=na;}}
+ for(const id in dp){const p=ROOT.people[id];if(p&&dp[id]>=(p.nameAt||0)&&Object.keys(ROOT.people).length>1)delete ROOT.people[id];}
+ usePerson(keep);}
 async function gh(path,opt={}){const r=await fetch('https://api.github.com'+path,Object.assign({},opt,{headers:{'Authorization':'Bearer '+localStorage.getItem(TOKKEY),'Accept':'application/vnd.github+json','Content-Type':'application/json'}}));
  if(!r.ok)throw new Error(r.status===401?'Token không hợp lệ hoặc đã hết hạn':r.status===404?'Không tìm thấy Gist. Kiểm tra Gist ID và quyền gist của token':'GitHub báo lỗi '+r.status);return r.json();}
 let syncTimer=null,syncing=false;
@@ -507,9 +537,9 @@ async function sync(manual){if(!localStorage.getItem(TOKKEY)){if(manual)toast('C
  if(!navigator.onLine){setBadge('Chờ mạng để đồng bộ');if(manual)toast('Đang offline. App sẽ tự đồng bộ khi có mạng.');return;}
  if(syncing)return;syncing=true;setBadge('Đang đồng bộ…');
  try{const id=localStorage.getItem(GISTKEY);
-  if(id){const g=await gh('/gists/'+id),f=g.files&&g.files[GFILE];if(f){const txt=f.truncated?await (await fetch(f.raw_url)).text():f.content;merge(JSON.parse(txt));}
-   await gh('/gists/'+id,{method:'PATCH',body:JSON.stringify({files:{[GFILE]:{content:JSON.stringify(D)}}})});}
-  else{const g=await gh('/gists',{method:'POST',body:JSON.stringify({description:'Thêm 1 – dữ liệu tập luyện',public:false,files:{[GFILE]:{content:JSON.stringify(D)}}})});localStorage.setItem(GISTKEY,g.id);}
+  if(id){const g=await gh('/gists/'+id),f=g.files&&g.files[GFILE];if(f){const txt=f.truncated?await (await fetch(f.raw_url)).text():f.content;mergeRoot(JSON.parse(txt));}
+   await gh('/gists/'+id,{method:'PATCH',body:JSON.stringify({files:{[GFILE]:{content:JSON.stringify(ROOT)}}})});}
+  else{const g=await gh('/gists',{method:'POST',body:JSON.stringify({description:'Thêm 1 – dữ liệu tập luyện',public:false,files:{[GFILE]:{content:JSON.stringify(ROOT)}}})});localStorage.setItem(GISTKEY,g.id);}
   save(false);localStorage.removeItem(DIRTY);localStorage.setItem(LASTSYNC,String(now()));setBadge('');if(manual)toast('Đã đồng bộ');if(!isEditing())render();
  }catch(e){setBadge('Chưa đồng bộ được');if(manual)toast(e.message||'Không kết nối được GitHub');}finally{syncing=false;}}
 
