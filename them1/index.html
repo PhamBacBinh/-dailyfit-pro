@@ -516,7 +516,7 @@ window.addEventListener('online',()=>{if(localStorage.getItem(DIRTY))sync(false)
 window.addEventListener('storage',e=>{if(e.key===KEY){load();if(!isEditing())render();}});
 setInterval(tick,250);
 load();makeAppleIcon();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator){const had=!!navigator.serviceWorker.controller;let rl=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl&&!runState()){rl=true;location.reload();}});navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});}
 go(runState()?'run':'dash');
 if(!D.profile)onboard();
 if(localStorage.getItem(TOKKEY))sync(false);
