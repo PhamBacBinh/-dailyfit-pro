@@ -89,9 +89,9 @@ details{font-size:14px;display:grid;gap:10px}summary{color:var(--accent);font-we
 .delta{font-size:12.5px;font-weight:600;display:block}.delta.up{color:var(--accent)}.delta.down{color:var(--danger)}
 .mlist{list-style:none;padding:0;display:grid}.mlist li{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);font-size:15px}.mlist li:first-child{border-top:0}
 .restbar{display:flex;justify-content:space-between;align-items:center;gap:8px}.restbar.on{border-color:var(--muted);border-style:dashed}
-.full{position:fixed;inset:0;z-index:40;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:22px;padding:calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));text-align:center}
-.full .clock{font-size:min(28vw,180px);color:#FF3B44;margin:0}.full.paused .clock{opacity:.5}.full .lbl{font-size:18px;color:#BDBDBD}.full .tgt{font-size:20px;color:#fff}
-.full .bar{background:#2A2A2A;height:12px}.full .bar i{background:#FF3B44}.full .btn{background:#1A1A1A;border-color:#333;color:#fff}.full .btn.primary{background:#D7262E;border-color:#D7262E}.full .min{background:none;border:0;color:#9A9A9A;font:inherit;font-size:15px;min-height:44px}
+.runfull{position:fixed;inset:0;z-index:40;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:22px;padding:calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));text-align:center}
+.runfull .clock{font-size:min(28vw,180px);color:#FF3B44;margin:0}.runfull.paused .clock{opacity:.5}.runfull .lbl{font-size:18px;color:#BDBDBD}.runfull .tgt{font-size:20px;color:#fff}
+.runfull .bar{background:#2A2A2A;height:12px}.runfull .bar i{background:#FF3B44}.runfull .btn{background:#1A1A1A;border-color:#333;color:#fff}.runfull .btn.primary{background:#D7262E;border-color:#D7262E}.runfull .min{background:none;border:0;color:#9A9A9A;font:inherit;font-size:15px;min-height:44px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -271,7 +271,7 @@ function vRun(){const r=runState(),timeEx=D.exercises.filter(e=>!e.hidden&&e.typ
  const e=exById(runEx);if(!e)return '<p class="empty">Chưa có bộ môn tính theo thời gian. Vào Cài đặt để thêm.</p>';
  const days=stats(),ti=targetInfo(e.id,today(),days),tg=ti.v,done=days[today()]&&days[today()].ex[e.id]||0,st=!r?'idle':r.pauseAt?'paused':'running';
  if(r&&D.settings.runFull&&!fullHidden){const fb=r.pauseAt?'<button class="btn primary xl-btn" data-act="runResume">Tiếp tục</button>':'<button class="btn xl-btn" data-act="runPause">Tạm dừng</button>';
-  return `<section class="full ${r.pauseAt?'paused':''}"><div class="lbl">${esc(e.name)}${r.pauseAt?' (tạm dừng)':''}</div><div id="clock" class="num clock">${mmss(elapsed(r))}</div>
+  return `<section class="runfull ${r.pauseAt?'paused':''}"><div class="lbl">${esc(e.name)}${r.pauseAt?' (tạm dừng)':''}</div><div id="clock" class="num clock">${mmss(elapsed(r))}</div>
   <div class="tgt">${tg!=null?`${ti.hold?'Giữ mức':'Mục tiêu'}: <b class="num">${mmss(tg*60)}</b>`:'Buổi đầu: đặt mốc'}</div>
   ${tg!=null?`<div class="bar"><i id="bar" data-tg="${tg}" data-done="${done}" style="width:${Math.min(100,(elapsed(r)/60+done)/tg*100)}%"></i></div>`:''}
   <div class="run-btns">${fb}<button class="btn primary xl-btn" data-act="runFinish">Kết thúc</button></div>
