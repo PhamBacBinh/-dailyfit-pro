@@ -89,6 +89,9 @@ details{font-size:14px;display:grid;gap:10px}summary{color:var(--accent);font-we
 .delta{font-size:12.5px;font-weight:600;display:block}.delta.up{color:var(--accent)}.delta.down{color:var(--danger)}
 .mlist{list-style:none;padding:0;display:grid}.mlist li{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);font-size:15px}.mlist li:first-child{border-top:0}
 .restbar{display:flex;justify-content:space-between;align-items:center;gap:8px}.restbar.on{border-color:var(--muted);border-style:dashed}
+.full{position:fixed;inset:0;z-index:40;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:22px;padding:calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));text-align:center}
+.full .clock{font-size:min(28vw,180px);color:#FF3B44;margin:0}.full.paused .clock{opacity:.5}.full .lbl{font-size:18px;color:#BDBDBD}.full .tgt{font-size:20px;color:#fff}
+.full .bar{background:#2A2A2A;height:12px}.full .bar i{background:#FF3B44}.full .btn{background:#1A1A1A;border-color:#333;color:#fff}.full .btn.primary{background:#D7262E;border-color:#D7262E}.full .min{background:none;border:0;color:#9A9A9A;font:inherit;font-size:15px;min-height:44px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -125,7 +128,7 @@ const fmtDate=s=>{const d=parseD(s);return ['CN','T2','T3','T4','T5','T6','T7'][
 const mmss=sec=>{sec=Math.max(0,Math.floor(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return (h?h+':'+pad(m):pad(m))+':'+pad(s);};
 const parseSets=s=>String(s).split(/[^0-9]+/).map(Number).filter(n=>n>0);
 const sum=a=>a.reduce((x,y)=>x+y,0);
-const SCHEMA=2;
+const SCHEMA=3;
 
 const RUN_INT={'Nhẹ':7.0,'Vừa':9.8,'Nhanh':11.5};
 const MET_PRESETS=[['Squat',5.0,'reps',2],['Plank',3.8,'time',0],['Gập bụng',3.8,'reps',2],['Nhảy dây',11.8,'time',0],['Đạp xe vừa',7.5,'time',0]];
@@ -137,10 +140,11 @@ function defaults(){return {schemaVersion:SCHEMA,profile:null,weights:[],rests:[
   {id:'pushup',name:'Chống đẩy',type:'reps',met:3.8,secPerRep:2,increment:1,hidden:false,updatedAt:0},
   {id:'pullup',name:'Lên xà',type:'reps',met:8.0,secPerRep:3,increment:1,hidden:false,updatedAt:0},
   {id:'run',name:'Chạy bộ',type:'time',met:9.8,secPerRep:0,increment:1,hidden:false,intensities:RUN_INT,updatedAt:0}],
- logs:[],deleted:[],settings:{weeklyGoalMin:150,wakeLock:true,targetSound:true,holdRule:true,reminderTime:'19:00',lockScreen:true,iosTimer:false,shortcutName:'Them1 Hen gio',updatedAt:0}};}
+ logs:[],deleted:[],settings:{weeklyGoalMin:150,wakeLock:true,targetSound:true,holdRule:true,reminderTime:'19:00',lockScreen:false,iosTimer:true,shortcutName:'Them1 Hen gio',runFull:true,firstTimerMin:30,updatedAt:0}};}
 function load(){try{D=JSON.parse(localStorage.getItem(KEY));}catch(e){D=null;}if(!D||!D.schemaVersion)D=defaults();migrate();}
 function migrate(){const d=defaults();for(const k of ['weights','exercises','logs','deleted','rests'])if(!Array.isArray(D[k]))D[k]=d[k];if(!D.settings)D.settings=d.settings;
  /* v1 → v2: thêm ngày nghỉ, âm báo, quy tắc giữ mức, giờ nhắc */
+ if((D.schemaVersion||1)<3){/* v3: khung Đang phát làm dừng nhạc → tắt; bật Hẹn giờ iPhone + màn hình chạy toàn màn hình */D.settings.lockScreen=false;D.settings.iosTimer=true;}
  for(const k in d.settings)if(D.settings[k]===undefined)D.settings[k]=d.settings[k];D.schemaVersion=SCHEMA;}
 function save(sync=true){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){toast('Bộ nhớ máy đầy. Hãy xuất file sao lưu.');}if(sync&&localStorage.getItem(TOKKEY)){localStorage.setItem(DIRTY,'1');scheduleSync();}}
 const exById=id=>D.exercises.find(e=>e.id===id);
@@ -266,9 +270,15 @@ function vRun(){const r=runState(),timeEx=D.exercises.filter(e=>!e.hidden&&e.typ
  if(r)runEx=r.exId;const cur=exById(runEx);if(!r&&(!cur||cur.type!=='time'||cur.hidden))runEx=timeEx[0]&&timeEx[0].id;
  const e=exById(runEx);if(!e)return '<p class="empty">Chưa có bộ môn tính theo thời gian. Vào Cài đặt để thêm.</p>';
  const days=stats(),ti=targetInfo(e.id,today(),days),tg=ti.v,done=days[today()]&&days[today()].ex[e.id]||0,st=!r?'idle':r.pauseAt?'paused':'running';
+ if(r&&D.settings.runFull&&!fullHidden){const fb=r.pauseAt?'<button class="btn primary xl-btn" data-act="runResume">Tiếp tục</button>':'<button class="btn xl-btn" data-act="runPause">Tạm dừng</button>';
+  return `<section class="full ${r.pauseAt?'paused':''}"><div class="lbl">${esc(e.name)}${r.pauseAt?' (tạm dừng)':''}</div><div id="clock" class="num clock">${mmss(elapsed(r))}</div>
+  <div class="tgt">${tg!=null?`${ti.hold?'Giữ mức':'Mục tiêu'}: <b class="num">${mmss(tg*60)}</b>`:'Buổi đầu: đặt mốc'}</div>
+  ${tg!=null?`<div class="bar"><i id="bar" data-tg="${tg}" data-done="${done}" style="width:${Math.min(100,(elapsed(r)/60+done)/tg*100)}%"></i></div>`:''}
+  <div class="run-btns">${fb}<button class="btn primary xl-btn" data-act="runFinish">Kết thúc</button></div>
+  <button class="min" data-act="fullHide">Thu nhỏ</button></section>`;}
  const btns={idle:'<button class="btn primary xl-btn" data-act="runStart">Bắt đầu</button>',
   running:'<button class="btn xl-btn" data-act="runPause">Tạm dừng</button><button class="btn danger xl-btn" data-act="runFinish">Kết thúc</button>',
-  paused:'<button class="btn primary xl-btn" data-act="runResume">Tiếp tục</button><button class="btn danger xl-btn" data-act="runFinish">Kết thúc</button>'}[st];
+  paused:'<button class="btn primary xl-btn" data-act="runResume">Tiếp tục</button><button class="btn danger xl-btn" data-act="runFinish">Kết thúc</button>'}[st]+(r&&D.settings.runFull?'<button class="btn" data-act="fullShow">Toàn màn hình</button>':'');
  return `<section class="runner ${st}">
  <select data-on="runEx" ${r?'disabled':''} aria-label="Bộ môn">${timeEx.concat(r&&!timeEx.includes(e)?[e]:[]).map(x=>`<option value="${x.id}" ${x.id===e.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
  <div id="clock" class="num clock" aria-live="off">${mmss(elapsed(r))}</div>
@@ -277,12 +287,12 @@ function vRun(){const r=runState(),timeEx=D.exercises.filter(e=>!e.hidden&&e.typ
  <div class="run-btns">${btns}</div>
  <label class="switch"><input type="checkbox" data-on="wake" ${D.settings.wakeLock?'checked':''}> Giữ màn hình sáng khi đang chạy</label>
  <label class="switch"><input type="checkbox" data-on="sound" ${D.settings.targetSound?'checked':''}> Âm báo khi đạt mục tiêu</label>
- <label class="switch"><input type="checkbox" data-on="lock" ${D.settings.lockScreen?'checked':''}> Hiện đồng hồ trên màn hình khóa</label>
- <label class="switch"><input type="checkbox" data-on="iostimer" ${D.settings.iosTimer?'checked':''}> Bật Hẹn giờ iPhone tới mục tiêu</label>
+ <label class="switch"><input type="checkbox" data-on="runfull" ${D.settings.runFull?'checked':''}> Màn hình chạy toàn màn hình</label>
+ <label class="switch"><input type="checkbox" data-on="iostimer" ${D.settings.iosTimer?'checked':''}> Bật Hẹn giờ iPhone (màn hình khóa)</label>
  ${r&&!r.pauseAt&&D.settings.lockScreen&&!(la&&!la.paused)?'<button class="btn full" data-act="lockStart">Hiện lại trên màn hình khóa</button>':''}
  <p class="muted small">Đồng hồ tính theo mốc giờ thực: khóa máy hoặc đóng app, mở lại vẫn đúng thời gian.</p></section>`;}
 /* ---------- Màn hình khóa: khung Đang phát ---------- */
-let la=null,lastLock=0,lastMeta='',iconPNG='icon.svg';
+let fullHidden=false,la=null,lastLock=0,lastMeta='',iconPNG='icon.svg';
 function silentWav(sec){const sr=8000,n=sr*sec,b=new ArrayBuffer(44+n),v=new DataView(b),w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
  w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);
  for(let i=0;i<n;i++)v.setUint8(44+i,128);return URL.createObjectURL(new Blob([b],{type:'audio/wav'}));}
@@ -331,8 +341,10 @@ function vSet(){const p=D.profile||{},tok=localStorage.getItem(TOKKEY),gid=local
  <section class="card"><h2>Nhắc tập hằng ngày</h2><div class="two"><label class="fld">Giờ nhắc<input type="time" id="rem" value="${D.settings.reminderTime}" data-on="remTime"></label><button class="btn primary" data-act="reminderICS">Thêm vào Lịch</button></div>
  <p class="muted small">Tạo sự kiện lặp mỗi ngày có chuông trong Lịch iPhone. Bấm vào sự kiện để mở app. Đổi giờ: xóa sự kiện cũ trong Lịch rồi tạo lại.</p></section>
  <section class="card"><h2>Màn hình khóa khi chạy</h2>
- <label class="switch" style="justify-content:flex-start"><input type="checkbox" data-on="lock" ${D.settings.lockScreen?'checked':''}> Hiện đồng hồ ở khung Đang phát</label>
+ <label class="switch" style="justify-content:flex-start"><input type="checkbox" data-on="runfull" ${D.settings.runFull?'checked':''}> Màn hình chạy toàn màn hình</label>
+ <label class="switch" style="justify-content:flex-start"><input type="checkbox" data-on="lock" ${D.settings.lockScreen?'checked':''}> Khung Đang phát (sẽ dừng nhạc đang nghe)</label>
  <label class="switch" style="justify-content:flex-start"><input type="checkbox" data-on="iostimer" ${D.settings.iosTimer?'checked':''}> Bật Hẹn giờ iPhone tới mục tiêu</label>
+ <label class="fld">Hẹn giờ buổi đầu chưa có mục tiêu (phút)<input type="number" inputmode="numeric" min="1" id="ftm" value="${D.settings.firstTimerMin}" data-on="ftm"></label>
  <div class="two"><label class="fld">Tên Phím tắt<input id="scn" value="${esc(D.settings.shortcutName)}" data-on="scName" autocapitalize="off"></label><button class="btn" data-act="testShortcut">Thử 10 giây</button></div>
  <p class="muted small">Hẹn giờ iPhone hiện đếm ngược trên màn hình khóa và đổ chuông khi đạt mục tiêu. Cần tạo Phím tắt cùng tên một lần.</p></section>
  <section class="card"><h2>Mục tiêu tự động</h2><label class="switch" style="justify-content:flex-start"><input type="checkbox" data-on="hold" ${D.settings.holdRule?'checked':''}> Giữ mức khi 2 buổi liên tiếp chưa đạt</label><p class="muted small">Bật: chưa đạt 2 buổi liền thì buổi sau giữ bằng kết quả gần nhất, đạt lại mới tăng tiếp.</p></section>
@@ -386,7 +398,7 @@ const ACT={
   commitLog({id:uid(),date:logDate,exerciseId:e.id,sets:[],durationSec:Math.round(m*60),durEst:false,intensity:it,met:it?e.intensities[it]:e.met,updatedAt:now()},e);render();},
  toRun:b=>{if(!runState())runEx=b.dataset.ex;go('run');},
  runStart:()=>{audioInit();const days=stats(),tg=targetFor(runEx,today(),days),done=days[today()]&&days[today()].ex[runEx]||0;
-  setRun({exId:runEx,startAt:now(),pausedMs:0,pauseAt:null,date:today(),alertAt:tg!=null&&tg>done?Math.round((tg-done)*60):null,alerted:false});wakeOn();lockOn();render();openIosTimer(runState().alertAt);},
+  setRun({exId:runEx,startAt:now(),pausedMs:0,pauseAt:null,date:today(),alertAt:tg!=null&&tg>done?Math.round((tg-done)*60):null,alerted:false});wakeOn();lockOn();fullHidden=false;render();const a=runState().alertAt;openIosTimer(a!=null?a:(D.settings.firstTimerMin||30)*60);},
  runPause:()=>{const r=runState();if(!r||r.pauseAt)return;r.pauseAt=now();setRun(r);wakeOff();if(la)la.pause();lockUpdate();render();},
  runResume:()=>{audioInit();const r=runState();if(!r)return;if(r.pauseAt){r.pausedMs+=now()-r.pauseAt;r.pauseAt=null;setRun(r);}closeModal();wakeOn();lockOn();render();},
  runFinish:()=>{const r=runState();if(!r)return;if(!r.pauseAt){r.pauseAt=now();setRun(r);}wakeOff();if(la)la.pause();lockUpdate();render();const e=exById(r.exId);
@@ -397,6 +409,8 @@ const ACT={
   commitLog({id:uid(),date:r.date,exerciseId:e.id,sets:[],durationSec:Math.round(elapsed(r)),durEst:false,intensity:it,met:it?e.intensities[it]:e.met,updatedAt:now()},e);setRun(null);lockOff();closeModal();render();},
  runDiscard:()=>{if(!confirm('Hủy buổi này? Thời gian sẽ không được lưu.'))return;setRun(null);lockOff();closeModal();render();},
  lockStart:()=>{lockOn();render();},
+ fullHide:()=>{fullHidden=true;render();},
+ fullShow:()=>{fullHidden=false;render();},
  testShortcut:()=>{if(!D.settings.iosTimer)return toast('Bật "Hẹn giờ iPhone" trước');const n=$('#scn');if(n&&n.value.trim()){D.settings.shortcutName=n.value.trim();D.settings.updatedAt=now();save();}openIosTimer(10);},
  editLog:b=>{const l=D.logs.find(x=>x.id===b.dataset.id),e=exById(l.exerciseId);if(!e)return;
   openModal(`<h2>Sửa: ${esc(e.name)}</h2><label class="fld">Ngày<input type="date" id="ed-date" value="${l.date}" max="${today()}"></label>
@@ -458,6 +472,8 @@ const ON={
  hold:t=>{D.settings.holdRule=t.checked;D.settings.updatedAt=now();save();toast(t.checked?'Đã bật giữ mức':'Đã tắt giữ mức');},
  lock:t=>{D.settings.lockScreen=t.checked;D.settings.updatedAt=now();save();const r=runState();if(t.checked&&r&&!r.pauseAt)lockOn();else if(!t.checked)lockOff();render();},
  iostimer:t=>{D.settings.iosTimer=t.checked;D.settings.updatedAt=now();save();if(t.checked)toast('Nhớ tạo Phím tắt "'+D.settings.shortcutName+'"');},
+ runfull:t=>{D.settings.runFull=t.checked;D.settings.updatedAt=now();save();fullHidden=false;render();},
+ ftm:t=>{const v=Number(t.value);if(v>=1){D.settings.firstTimerMin=Math.round(v);D.settings.updatedAt=now();save();}},
  scName:t=>{if(t.value.trim()){D.settings.shortcutName=t.value.trim();D.settings.updatedAt=now();save();}},
  remTime:t=>{if(t.value){D.settings.reminderTime=t.value;D.settings.updatedAt=now();save();}},
  wake:t=>{D.settings.wakeLock=t.checked;D.settings.updatedAt=now();save();const r=runState();t.checked&&r&&!r.pauseAt?wakeOn():wakeOff();},
