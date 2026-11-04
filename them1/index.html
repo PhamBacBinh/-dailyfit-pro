@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E7C86">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Thêm 1">
+<title>Thêm 1 – Nhật ký tập</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" id="appleIcon" href="icon.svg">
+<style>
+:root{--bg:#EEF2F3;--surface:#fff;--ink:#16232B;--muted:#5E6E78;--line:#D6DEE2;--accent:#0E7C86;--on-accent:#fff;--soft:#DCEDEE;--gold:#B8740A;--gold-soft:#FBEBCB;--danger:#B42318;--h0:#E1E7EA;--h1:#B4DCDF;--h2:#6FBFC6;--h3:#2E9AA4;--h4:#0B5F67;--num:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0E1A1F;--surface:#15242B;--ink:#E4ECEE;--muted:#8FA2AB;--line:#263A42;--accent:#2BB3BE;--on-accent:#06262A;--soft:#173840;--gold:#F2B441;--gold-soft:#3A2E14;--danger:#F97066;--h0:#1C2D34;--h1:#1D4C53;--h2:#1F7480;--h3:#2BA0AC;--h4:#6FD6DE}}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{font:16px/1.45 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top) 0 calc(80px + env(safe-area-inset-bottom));min-height:100vh}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:baseline;justify-content:space-between;padding:14px 16px 8px;max-width:640px;margin:0 auto}
+.top h1{font-size:28px;font-weight:700;letter-spacing:-.02em}
+#syncBadge{font-size:13px;color:var(--muted)}
+main{padding:0 16px;max-width:640px;margin:0 auto;display:grid;gap:12px}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums;font-weight:700}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:10px}
+h2{font-size:17px;font-weight:650}
+.muted{color:var(--muted)}.small{font-size:13px}.center{text-align:center;padding:8px 0 16px}
+.row-between{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+.hero{background:var(--accent);color:var(--on-accent);border-radius:22px;padding:20px 18px 16px;display:grid;gap:14px}
+.hero-main{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.hero .lbl{width:100%;font-size:15px;opacity:.85}
+.xl{font-size:64px;line-height:1;letter-spacing:-.03em}
+.hero .u{font-size:18px;opacity:.85}
+.hero-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid rgba(255,255,255,.28);padding-top:12px}
+.hero-row b{display:block;font-size:24px}.hero-row span{font-size:12.5px;opacity:.85;line-height:1.25;display:block}
+.week{grid-template-columns:116px 1fr;align-items:center;gap:16px}
+.ring{width:116px;height:116px}.ring-bg{fill:none;stroke:var(--soft);stroke-width:12}.ring-fg{fill:none;stroke:var(--accent);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset .6s}
+.ring-t{font-size:24px;text-anchor:middle;fill:var(--ink)}.ring-s{font-size:11px;text-anchor:middle;fill:var(--muted)}
+.week-info{display:grid;gap:2px}.week-info b{font-size:22px}
+.heat,.chart{width:100%;height:auto;display:block}.ax{font-size:9px;fill:var(--muted)}
+.h-1{fill:transparent}.h0{fill:var(--h0)}.h1{fill:var(--h1)}.h2{fill:var(--h2)}.h3{fill:var(--h3)}.h4{fill:var(--h4)}
+.legend{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);justify-content:flex-end;flex-wrap:wrap}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.legend .h0{background:var(--h0)}.legend .h1{background:var(--h1)}.legend .h2{background:var(--h2)}.legend .h3{background:var(--h3)}.legend .h4{background:var(--h4)}
+.legend .lv{background:var(--accent);height:3px;width:16px;margin-left:8px}.legend .lt{border-top:2px dashed var(--gold);height:0;width:16px;border-radius:0;margin-left:8px}
+.gl{stroke:var(--line);stroke-width:1}.val{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}.val-d{fill:var(--accent)}.tg{fill:none;stroke:var(--gold);stroke-width:1.5;stroke-dasharray:4 4}
+.seg{display:flex;background:var(--bg);border-radius:10px;padding:3px}.seg button{flex:1;min-height:36px;border:0;background:none;color:var(--muted);border-radius:8px;font:inherit;font-size:14px}.seg .on{background:var(--surface);color:var(--ink);font-weight:600}
+.pr,.logs,.exlist{list-style:none;padding:0;display:grid}
+.pr li{display:grid;grid-template-columns:1fr auto;gap:0 8px;padding:8px 0;border-top:1px solid var(--line)}.pr li:first-child{border-top:0}.pr small{color:var(--muted);text-align:right}.pr b{text-align:right}.pr li small:nth-child(3){grid-column:2}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stats3 b{display:block;font-size:24px}.stats3 span{font-size:12.5px;color:var(--muted);display:block}.tag{font-style:normal;font-size:12.5px;color:var(--accent);font-weight:600}
+.btn{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97)}.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}.btn.danger{color:var(--danger)}.btn.full{width:100%}
+.btn.sm{min-height:36px;padding:0 12px;font-size:14px}.btn.icon{width:44px;padding:0;font-size:22px}.btn.round{width:52px;height:52px;border-radius:50%;font-size:26px;padding:0}.btn:disabled{opacity:.4}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fld{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+input,select{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:44px;padding:0 12px;width:100%}
+input[type=date]{-webkit-appearance:none;appearance:none}
+input[type=checkbox]{width:22px;min-height:22px;accent-color:var(--accent)}
+.counter{display:flex;align-items:center;gap:12px}.counter .big{font-size:40px;min-width:64px;text-align:center}.counter .btn:last-child{margin-left:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{min-height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font:inherit;font-size:14px;font-family:var(--num);font-weight:600}
+.ex.ok{border-color:var(--accent)}
+.badge{font-size:12.5px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--accent);white-space:nowrap}.badge.pr{background:var(--gold-soft);color:var(--gold)}
+.target{font-size:15px}.target b{font-size:18px}.done{margin-left:6px}
+.datebar{display:grid;grid-template-columns:44px 1fr 44px;gap:8px}
+.runner{display:grid;gap:16px;text-align:center;padding:8px 0}
+.clock{font-size:min(26vw,128px);line-height:1;letter-spacing:-.04em;margin:8px 0}.clock.sm{font-size:56px;margin:0}
+.runner.running .clock{color:var(--accent)}.runner.paused .clock{opacity:.55}
+.bar{height:10px;background:var(--soft);border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .25s linear}
+.run-btns{display:grid;grid-auto-flow:column;gap:10px}.xl-btn{min-height:64px;font-size:19px;border-radius:18px}
+.switch{display:flex;gap:10px;align-items:center;justify-content:center;font-size:14px}
+.logs li,.exlist li{display:grid;gap:6px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.logs li{grid-template-columns:1fr auto auto auto}.exlist li{grid-template-columns:1fr auto auto}
+.logs li:first-child,.exlist li:first-child{border-top:0}.logs li div,.exlist li div{display:grid}.logs .muted,.exlist .muted{font-size:13px}.kc{font-size:14px;color:var(--muted)}.exlist li.off b{opacity:.5}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;display:grid;grid-template-columns:repeat(5,1fr);background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{border:0;background:none;color:var(--muted);font:inherit;font-size:11px;display:grid;justify-items:center;gap:2px;padding:8px 0 6px;min-height:56px}
+.tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.tabs .on{color:var(--accent);font-weight:600}
+.modal{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center}.modal.hidden{display:none}
+.sheet{background:var(--surface);width:100%;max-width:640px;border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));display:grid;gap:12px;max-height:90vh;overflow:auto;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:0}}
+details{font-size:14px;display:grid;gap:10px}summary{color:var(--accent);font-weight:600;min-height:44px;display:flex;align-items:center}
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:30;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.empty{color:var(--muted);text-align:center;padding:24px 8px}
+.hr{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:2 2}.legend .hr-l{border:1.5px dashed var(--muted);margin-left:8px}
+.mnav{display:grid;grid-template-columns:44px 1fr 44px;gap:8px;align-items:center;text-align:center}.mnav h2{font-size:17px}
+.delta{font-size:12.5px;font-weight:600;display:block}.delta.up{color:var(--accent)}.delta.down{color:var(--danger)}
+.mlist{list-style:none;padding:0;display:grid}.mlist li{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);font-size:15px}.mlist li:first-child{border-top:0}
+.restbar{display:flex;justify-content:space-between;align-items:center;gap:8px}.restbar.on{border-color:var(--muted);border-style:dashed}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><h1 id="title">Tổng quan</h1><span id="syncBadge"></span></header>
+<main id="view"></main>
+<nav class="tabs">
+<button data-act="tab" data-tab="dash"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Tổng quan</button>
+<button data-act="tab" data-tab="log"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>Ghi nhận</button>
+<button data-act="tab" data-tab="run"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4"/></svg>Chạy bộ</button>
+<button data-act="tab" data-tab="hist"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Lịch sử</button>
+<button data-act="tab" data-tab="set"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Cài đặt</button>
+</nav>
+<div id="modal" class="modal hidden"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div id="toast" role="status"></div>
+<input type="file" id="file" accept="application/json,.json" hidden data-on="import">
+<script>
+'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+const KEY='ft_data',RUNKEY='ft_run',TOKKEY='ft_token',GISTKEY='ft_gist',DIRTY='ft_dirty',LASTSYNC='ft_lastsync',GFILE='them1-data.json';
+const now=()=>Date.now();
+const uid=()=>now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>ymd(new Date());
+const parseD=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+const addDays=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return ymd(d);};
+const dayDiff=(a,b)=>Math.round((parseD(b)-parseD(a))/864e5);
+const weekStart=s=>addDays(s,-((parseD(s).getDay()+6)%7));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=(n,d=0)=>Number(n||0).toLocaleString('vi-VN',{maximumFractionDigits:d});
+const round1=n=>Math.round(n*10)/10;
+const fmtDate=s=>{const d=parseD(s);return ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()]+', '+pad(d.getDate())+'/'+pad(d.getMonth()+1);};
+const mmss=sec=>{sec=Math.max(0,Math.floor(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return (h?h+':'+pad(m):pad(m))+':'+pad(s);};
+const parseSets=s=>String(s).split(/[^0-9]+/).map(Number).filter(n=>n>0);
+const sum=a=>a.reduce((x,y)=>x+y,0);
+const SCHEMA=2;
+
+const RUN_INT={'Nhẹ':7.0,'Vừa':9.8,'Nhanh':11.5};
+const MET_PRESETS=[['Squat',5.0,'reps',2],['Plank',3.8,'time',0],['Gập bụng',3.8,'reps',2],['Nhảy dây',11.8,'time',0],['Đạp xe vừa',7.5,'time',0]];
+
+/* ---------- Dữ liệu ---------- */
+let D;
+function defaults(){return {schemaVersion:SCHEMA,profile:null,weights:[],rests:[],
+ exercises:[
+  {id:'pushup',name:'Chống đẩy',type:'reps',met:3.8,secPerRep:2,increment:1,hidden:false,updatedAt:0},
+  {id:'pullup',name:'Lên xà',type:'reps',met:8.0,secPerRep:3,increment:1,hidden:false,updatedAt:0},
+  {id:'run',name:'Chạy bộ',type:'time',met:9.8,secPerRep:0,increment:1,hidden:false,intensities:RUN_INT,updatedAt:0}],
+ logs:[],deleted:[],settings:{weeklyGoalMin:150,wakeLock:true,targetSound:true,holdRule:true,reminderTime:'19:00',updatedAt:0}};}
+function load(){try{D=JSON.parse(localStorage.getItem(KEY));}catch(e){D=null;}if(!D||!D.schemaVersion)D=defaults();migrate();}
+function migrate(){const d=defaults();for(const k of ['weights','exercises','logs','deleted','rests'])if(!Array.isArray(D[k]))D[k]=d[k];if(!D.settings)D.settings=d.settings;
+ /* v1 → v2: thêm ngày nghỉ, âm báo, quy tắc giữ mức, giờ nhắc */
+ for(const k in d.settings)if(D.settings[k]===undefined)D.settings[k]=d.settings[k];D.schemaVersion=SCHEMA;}
+function save(sync=true){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){toast('Bộ nhớ máy đầy. Hãy xuất file sao lưu.');}if(sync&&localStorage.getItem(TOKKEY)){localStorage.setItem(DIRTY,'1');scheduleSync();}}
+const exById=id=>D.exercises.find(e=>e.id===id);
+const unit=e=>e.type==='reps'?'lần':'phút';
+const fv=(e,v)=>e.type==='reps'?fmt(v):fmt(v,1);
+function weightAt(date){let w=null;for(const x of D.weights)if(x.date<=date&&(!w||x.date>w.date))w=x;if(!w)for(const x of D.weights)if(!w||x.date<w.date)w=x;return w?w.kg:null;}
+function kcalOf(l){return (l.met||0)*3.5*(weightAt(l.date)||0)/200*(l.durationSec/60);}
+function value(l){const e=exById(l.exerciseId);return e&&e.type==='reps'?sum(l.sets||[]):l.durationSec/60;}
+function bmr(){const p=D.profile,w=weightAt(today());if(!p||!w)return 0;const age=new Date().getFullYear()-p.birthYear;return 10*w+6.25*p.heightCm-5*age+(p.sex==='nam'?5:-161);}
+function stats(){const days={};for(const l of D.logs){const d=days[l.date]||(days[l.date]={ex:{},kcal:0,min:0});d.ex[l.exerciseId]=(d.ex[l.exerciseId]||0)+value(l);d.kcal+=kcalOf(l);d.min+=l.durationSec/60;}return days;}
+const PC=new WeakMap();
+function nextTarget(prev,e){const n=prev.length;if(!n)return {v:null,hold:false};const a=prev[n-1],b=prev[n-2],hold=!!(D.settings.holdRule&&b&&a.miss&&b.miss);return {v:hold?a.v:a.v+e.increment,hold};}
+function sessions(id,days){let m=PC.get(days);if(!m){m={};PC.set(days,m);}if(m[id])return m[id];const e=exById(id),out=[];
+ for(const d of Object.keys(days).filter(d=>days[d].ex[id]!=null).sort()){const v=days[d].ex[id],t=nextTarget(out,e).v;out.push({d,v,t,miss:t!=null&&v<t-1e-9});}return m[id]=out;}
+function targetInfo(id,date,days){const e=exById(id);return e?nextTarget(sessions(id,days).filter(s=>s.d<date),e):{v:null,hold:false};}
+function targetFor(id,date,days){return targetInfo(id,date,days).v;}
+function prBefore(id,date,days){let m=0;for(const d in days)if(d<date&&days[d].ex[id]>m)m=days[d].ex[id];return m;}
+const restSet=()=>new Set(D.rests.map(r=>r.date));
+function streaks(days){const rs=restSet(),ok=d=>!!days[d]||rs.has(d);let cur=0,d=today();if(!ok(d))d=addDays(d,-1);while(ok(d)){if(days[d])cur++;d=addDays(d,-1);}
+ let best=0,run=0,prev=null;for(const x of [...new Set([...Object.keys(days),...rs])].sort()){run=prev&&addDays(prev,1)===x?run:0;if(days[x])run++;if(run>best)best=run;prev=x;}return {cur,best:Math.max(best,cur)};}
+function restsInWeek(date,exceptDate){const ws=weekStart(date),we=addDays(ws,6);return D.rests.filter(r=>r.date>=ws&&r.date<=we&&r.date!==exceptDate).length;}
+function lastSet(id){let l=null;for(const x of D.logs)if(x.exerciseId===id&&x.sets&&x.sets.length&&(!l||x.date>l.date||(x.date===l.date&&x.updatedAt>l.updatedAt)))l=x;return l?l.sets[l.sets.length-1]:0;}
+function logText(e,l){if(!e)return '';return e.type==='reps'?l.sets.join('-')+' = '+sum(l.sets)+' lần':mmss(l.durationSec)+(l.intensity?', '+l.intensity:'');}
+
+/* ---------- Giao diện ---------- */
+let tab='dash',logDate=today(),chartEx=null,chartRange=30,runEx='run',histLimit=30,repMonth=today().slice(0,7);
+const draft={};
+const TITLES={dash:'Tổng quan',log:'Ghi nhận',run:'Chạy bộ',hist:'Lịch sử',set:'Cài đặt'};
+function go(t){tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));$('#title').textContent=TITLES[t];render();window.scrollTo(0,0);}
+function render(){$('#view').innerHTML=({dash:vDash,log:vLog,run:vRun,hist:vHist,set:vSet})[tab]();}
+
+function vDash(){const days=stats(),t=today(),td=days[t]||{ex:{},kcal:0,min:0},vis=D.exercises.filter(e=>!e.hidden);
+ let done=0;for(const e of vis){const tg=targetFor(e.id,t,days),v=td.ex[e.id]||0;if(v>0&&(tg==null||v>=tg-1e-9))done++;}
+ const ws=weekStart(t);let wmin=0,wkc=0;for(let i=0;i<7;i++){const d=days[addDays(ws,i)];if(d){wmin+=d.min;wkc+=d.kcal;}}
+ const goal=D.settings.weeklyGoalMin||150,p=Math.min(1,wmin/goal),C=2*Math.PI*52,st=streaks(days);
+ if(!chartEx||!vis.some(e=>e.id===chartEx))chartEx=vis[0]&&vis[0].id;
+ return `<section class="hero">
+  <div class="hero-main"><span class="lbl">Hôm nay tiêu hao</span><b class="num xl">${fmt(td.kcal)}</b><span class="u">kcal</span></div>
+  <div class="hero-row"><div><b class="num">${fmt(td.min)}</b><span>phút vận động</span></div><div><b class="num">${done}/${vis.length}</b><span>môn đạt mục tiêu</span></div><div><b class="num">${st.cur}</b><span>ngày liên tiếp</span></div></div>
+ </section>
+ <section class="card week">
+  <svg viewBox="0 0 120 120" class="ring" role="img" aria-label="Tiến độ tuần ${Math.round(p*100)}%"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring-fg" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}" transform="rotate(-90 60 60)"/><text x="60" y="62" class="num ring-t">${Math.round(p*100)}%</text><text x="60" y="80" class="ring-s">tuần này</text></svg>
+  <div class="week-info"><h2>Mục tiêu tuần</h2><p><b class="num">${fmt(wmin)}</b> / ${goal} phút</p><p class="muted small">${fmt(wkc)} kcal tuần này</p><p class="muted small">Chuỗi dài nhất: ${st.best} ngày</p></div>
+ </section>
+ <section class="card"><h2>12 tuần gần nhất</h2>${heatmap(days)}</section>
+ <section class="card"><div class="row-between"><h2>Tiến bộ</h2>${vis.length?`<select data-on="chartEx" style="width:auto">${vis.map(e=>`<option value="${e.id}" ${e.id===chartEx?'selected':''}>${esc(e.name)}</option>`).join('')}</select>`:''}</div>
+  <div class="seg">${[7,30,90].map(n=>`<button data-act="range" data-n="${n}" class="${n===chartRange?'on':''}">${n} ngày</button>`).join('')}</div>${progressChart(days)}</section>
+ <section class="card"><h2>Kỷ lục cá nhân</h2>${prList(days,vis)}</section>
+ ${weightCard()}
+ ${monthCard(days)}`;}
+
+function heatmap(days){const t=today(),start=addDays(weekStart(t),-77),S=14,G=3,cells=[],rs=restSet();let mx=0,s='';
+ for(let i=0;i<84;i++){const d=addDays(start,i),k=days[d]?days[d].kcal:0;if(k>mx)mx=k;cells.push([d,k]);}
+ cells.forEach(([d,k],i)=>{const c=Math.floor(i/7),r=i%7,lv=d>t?-1:k>0?Math.min(4,Math.max(1,Math.ceil(k/mx*4))):rs.has(d)?'r':0;
+  s+=`<rect x="${c*(S+G)+20}" y="${r*(S+G)}" width="${S}" height="${S}" rx="3" class="h${lv}"><title>${fmtDate(d)}: ${fmt(k)} kcal</title></rect>`;});
+ const lab=['T2','','T4','','T6','','CN'].map((l,r)=>`<text x="0" y="${r*(S+G)+11}" class="ax">${l}</text>`).join('');
+ return `<svg viewBox="0 0 ${12*(S+G)+20} ${7*(S+G)}" class="heat" role="img" aria-label="Lịch tập 12 tuần">${lab}${s}</svg><div class="legend">Ít <i class="h0"></i><i class="h1"></i><i class="h2"></i><i class="h3"></i><i class="h4"></i> Nhiều kcal <i class="hr-l"></i> Nghỉ</div>`;}
+
+function chart(series,o){const W=320,H=160,L=36,R=10,T=10,B=22,ys=series.flatMap(s=>s.pts.map(p=>p[1]));
+ if(!ys.length)return '<p class="empty">Chưa có dữ liệu trong khoảng này.</p>';
+ let mn=Math.min(...ys),mx=Math.max(...ys);if(mx===mn){mx+=1;mn-=1;}const pd=(mx-mn)*.12;mx+=pd;mn=Math.max(o.floor==null?-Infinity:o.floor,mn-pd);
+ const X=i=>L+(o.n<=1?.5:i/(o.n-1))*(W-L-R),Y=y=>T+(1-(y-mn)/(mx-mn))*(H-T-B);let s='';
+ for(let k=0;k<=3;k++){const y=mn+(mx-mn)*k/3;s+=`<line x1="${L}" x2="${W-R}" y1="${Y(y).toFixed(1)}" y2="${Y(y).toFixed(1)}" class="gl"/><text x="${L-5}" y="${(Y(y)+3).toFixed(1)}" class="ax" text-anchor="end">${fmt(y,o.dec)}</text>`;}
+ s+=`<text x="${L}" y="${H-5}" class="ax">${o.x0}</text><text x="${W-R}" y="${H-5}" class="ax" text-anchor="end">${o.x1}</text>`;
+ for(const se of series){if(!se.pts.length)continue;s+=`<path d="${se.pts.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join('')}" class="${se.cls}"/>`;
+  if(se.dots)s+=se.pts.map(p=>`<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3" class="${se.cls}-d"/>`).join('');}
+ return `<svg viewBox="0 0 ${W} ${H}" class="chart">${s}</svg>`;}
+
+function progressChart(days){const e=exById(chartEx);if(!e)return '<p class="empty">Thêm bộ môn trong Cài đặt để xem tiến bộ.</p>';
+ const t=today(),s0=addDays(t,-(chartRange-1)),v=[],g=[];
+ for(let i=0;i<chartRange;i++){const d=addDays(s0,i),val=days[d]&&days[d].ex[e.id];if(val!=null){v.push([i,val]);const tg=targetFor(e.id,d,days);if(tg!=null)g.push([i,tg]);}}
+ return chart([{pts:g,cls:'tg'},{pts:v,cls:'val',dots:true}],{n:chartRange,x0:fmtDate(s0),x1:'Hôm nay',dec:e.type==='reps'?0:1,floor:0})+`<div class="legend"><i class="lv"></i> Kết quả (${unit(e)}) <i class="lt"></i> Mục tiêu</div>`;}
+
+function prList(days,vis){if(!vis.length)return '<p class="muted">Chưa có bộ môn.</p>';
+ return `<ul class="pr">${vis.map(e=>{let m=0,md=null;for(const d in days){const v=days[d].ex[e.id];if(v>m){m=v;md=d;}}
+  return md?`<li><span>${esc(e.name)}</span><b class="num">${fv(e,m)} ${unit(e)}</b><small>${fmtDate(md)}</small></li>`:`<li><span>${esc(e.name)}</span><small>Chưa có</small></li>`;}).join('')}</ul>`;}
+
+function weightCard(){const w=weightAt(today()),p=D.profile;if(!w||!p)return '';const h=p.heightCm/100,bmi=w/(h*h);
+ const cls=bmi<18.5?'Thiếu cân':bmi<23?'Bình thường':bmi<25?'Thừa cân':'Béo phì';
+ const ws=[...D.weights].sort((a,b)=>a.date<b.date?-1:1),f=ws[0].date,n=dayDiff(f,today())+1;
+ return `<section class="card"><div class="row-between"><h2>Cân nặng</h2><button class="btn sm" data-act="weightOpen">Cập nhật</button></div>
+ <div class="stats3"><div><b class="num">${fmt(w,1)}</b><span>kg</span></div><div><b class="num">${fmt(bmi,1)}</b><span>BMI, chuẩn châu Á</span><em class="tag">${cls}</em></div><div><b class="num">${fmt(bmr())}</b><span>BMR kcal/ngày</span></div></div>
+ ${ws.length>1?chart([{pts:ws.map(x=>[dayDiff(f,x.date),x.kg]),cls:'val',dots:true}],{n:Math.max(n,2),x0:fmtDate(f),x1:'Hôm nay',dec:1}):'<p class="muted small">Cập nhật cân nặng định kỳ để xem xu hướng.</p>'}</section>`;}
+
+function monthStats(ym,days){const [y,m]=ym.split('-').map(Number),s=ym+'-01',e=ymd(new Date(y,m,0));let k=0,mi=0,ad=0;const per={};
+ for(const d in days){if(d<s||d>e)continue;ad++;k+=days[d].kcal;mi+=days[d].min;for(const id in days[d].ex)per[id]=(per[id]||0)+days[d].ex[id];}return {s,e,k,mi,ad,per};}
+function monthCard(days){const cur=monthStats(repMonth,days),[y,m]=repMonth.split('-').map(Number),prevYm=ymd(new Date(y,m-2,1)).slice(0,7),pv=monthStats(prevYm,days),t=today();
+ let prs=0;for(const ex of D.exercises){let mx=0;for(const se of sessions(ex.id,days)){if(se.v>mx){if(mx>0&&se.d>=cur.s&&se.d<=cur.e)prs++;mx=se.v;}}}
+ const rests=D.rests.filter(r=>r.date>=cur.s&&r.date<=cur.e).length,end=cur.e<t?cur.e:t,w0=weightAt(cur.s),w1=weightAt(end);
+ const dl=(a,b)=>b>0?`<span class="delta ${a>=b?'up':'down'}">${a>=b?'+':''}${fmt((a-b)/b*100)}% so với tháng trước</span>`:'';
+ const rows=D.exercises.filter(x=>cur.per[x.id]).map(x=>`<li><span>${esc(x.name)}</span><b class="num">${fv(x,cur.per[x.id])} ${unit(x)}</b></li>`).join('');
+ return `<section class="card"><div class="mnav"><button class="btn icon" data-act="monthShift" data-n="-1" aria-label="Tháng trước">‹</button><h2>Báo cáo tháng ${m}/${y}</h2><button class="btn icon" data-act="monthShift" data-n="1" aria-label="Tháng sau" ${repMonth>=t.slice(0,7)?'disabled':''}>›</button></div>
+ <div class="stats3"><div><b class="num">${fmt(cur.k)}</b><span>kcal</span>${dl(cur.k,pv.k)}</div><div><b class="num">${fmt(cur.mi)}</b><span>phút vận động</span>${dl(cur.mi,pv.mi)}</div><div><b class="num">${cur.ad}</b><span>ngày tập, ${rests} ngày nghỉ</span></div></div>
+ <div class="stats3"><div><b class="num">${prs}</b><span>kỷ lục mới</span></div><div><b class="num">${w0&&w1?(w1-w0>0?'+':'')+fmt(w1-w0,1):'–'}</b><span>kg trong tháng</span></div><div><b class="num">${w1?fmt(w1,1):'–'}</b><span>kg cuối kỳ</span></div></div>
+ ${rows?`<ul class="mlist">${rows}</ul>`:'<p class="muted small">Tháng này chưa có buổi tập.</p>'}</section>`;}
+
+function vLog(){const days=stats(),vis=D.exercises.filter(e=>!e.hidden),d=logDate;
+ return `<div class="datebar"><button class="btn icon" data-act="dateShift" data-n="-1" aria-label="Ngày trước">‹</button><input type="date" value="${d}" max="${today()}" data-on="logDate" aria-label="Ngày ghi nhận"><button class="btn icon" data-act="dateShift" data-n="1" aria-label="Ngày sau" ${d>=today()?'disabled':''}>›</button></div>`
+ +restBar(d,days)+(vis.length?vis.map(e=>exCard(e,d,days)).join(''):'<p class="empty">Chưa có bộ môn. Vào Cài đặt để thêm.</p>');}
+function restBar(d,days){const on=restSet().has(d);if(days[d]&&!on)return '';
+ return `<section class="card restbar ${on?'on':''}"><div><h2>${on?'Ngày nghỉ chủ động':'Hôm nay nghỉ?'}</h2><p class="muted small">${on?'Chuỗi ngày tập được giữ nguyên.':'Tối đa 1 ngày nghỉ mỗi tuần, không làm đứt chuỗi.'}</p></div><button class="btn sm" data-act="restToggle" data-date="${d}">${on?'Bỏ ngày nghỉ':'Đánh dấu nghỉ'}</button></section>`;}
+
+function exCard(e,d,days){const ti=targetInfo(e.id,d,days),tg=ti.v,v=days[d]&&days[d].ex[e.id]||0,pr=prBefore(e.id,d,days),ok=v>0&&(tg==null||v>=tg-1e-9),isPR=v>0&&pr>0&&v>pr;
+ const logs=D.logs.filter(l=>l.date===d&&l.exerciseId===e.id);let body;
+ if(e.type==='reps'){const dr=draft[e.id]||(draft[e.id]={cur:lastSet(e.id)||10,sets:[]});
+  body=`<div class="counter"><button class="btn round" data-act="dec" data-ex="${e.id}" aria-label="Giảm">−</button><b class="num big">${dr.cur}</b><button class="btn round" data-act="inc" data-ex="${e.id}" aria-label="Tăng">+</button><button class="btn" data-act="addSet" data-ex="${e.id}">Thêm hiệp</button></div>
+  <div class="chips">${dr.sets.map((s,i)=>`<button class="chip" data-act="rmSet" data-ex="${e.id}" data-i="${i}" aria-label="Xóa hiệp ${s}">${s} ×</button>`).join('')||'<span class="muted small">Chưa thêm hiệp. Bấm Lưu sẽ ghi số đang chọn là 1 hiệp.</span>'}</div>
+  <label class="fld">Hoặc nhập nhanh các hiệp<input inputmode="numeric" placeholder="vd 20-18-15" value="${dr.sets.join('-')}" data-on="setsText" data-ex="${e.id}"></label>
+  <label class="fld">Thời gian thực tế (phút, không bắt buộc)<input type="number" inputmode="decimal" min="0" step="0.5" id="dur-${e.id}" placeholder="Tự ước tính ${e.secPerRep} giây/lần"></label>
+  <button class="btn primary full" data-act="saveReps" data-ex="${e.id}">Lưu ${esc(e.name.toLowerCase())}</button>`;}
+ else{body=`<div class="two"><label class="fld">Thời gian (phút)<input type="number" inputmode="decimal" min="0" step="0.5" id="min-${e.id}" placeholder="${tg!=null?fmt(tg,1):'15'}"></label>${e.intensities?`<label class="fld">Cường độ<select id="int-${e.id}">${Object.keys(e.intensities).map(k=>`<option ${k==='Vừa'?'selected':''}>${k}</option>`).join('')}</select></label>`:''}</div>
+  <div class="two"><button class="btn" data-act="toRun" data-ex="${e.id}">Bấm giờ</button><button class="btn primary" data-act="saveTime" data-ex="${e.id}">Lưu</button></div>`;}
+ return `<section class="card ex ${ok?'ok':''}" data-card="${e.id}"><div class="row-between"><h2>${esc(e.name)}</h2>${isPR?'<span class="badge pr">Kỷ lục mới</span>':ok?'<span class="badge">Đạt mục tiêu</span>':''}</div>
+ <p class="target">${tg==null?'Buổi đầu tiên: đặt mốc của bạn':ti.hold?`Giữ mức: <b class="num">${fv(e,tg)}</b> ${unit(e)} <span class="muted small">(2 buổi gần nhất chưa đạt, chưa tăng)</span>`:`Mục tiêu: <b class="num">${fv(e,tg)}</b> ${unit(e)} <span class="muted">(+${fv(e,e.increment)})</span>`}${v?`<span class="done muted">Đã làm: <b class="num">${fv(e,v)}</b></span>`:''}</p>
+ ${logs.length?`<p class="muted small">${logs.map(l=>logText(e,l)).join('; ')}</p>`:''}${body}</section>`;}
+function rerenderCard(id){const el=$(`[data-card="${id}"]`);if(!el)return render();const dur=($('#dur-'+id)||{}).value;el.outerHTML=exCard(exById(id),logDate,stats());if(dur)$('#dur-'+id).value=dur;}
+
+/* ---------- Đồng hồ ---------- */
+function runState(){try{return JSON.parse(localStorage.getItem(RUNKEY));}catch(e){return null;}}
+function setRun(r){r?localStorage.setItem(RUNKEY,JSON.stringify(r)):localStorage.removeItem(RUNKEY);}
+function elapsed(r){return r?((r.pauseAt||now())-r.startAt-r.pausedMs)/1000:0;}
+function vRun(){const r=runState(),timeEx=D.exercises.filter(e=>!e.hidden&&e.type==='time');
+ if(r)runEx=r.exId;const cur=exById(runEx);if(!r&&(!cur||cur.type!=='time'||cur.hidden))runEx=timeEx[0]&&timeEx[0].id;
+ const e=exById(runEx);if(!e)return '<p class="empty">Chưa có bộ môn tính theo thời gian. Vào Cài đặt để thêm.</p>';
+ const days=stats(),ti=targetInfo(e.id,today(),days),tg=ti.v,done=days[today()]&&days[today()].ex[e.id]||0,st=!r?'idle':r.pauseAt?'paused':'running';
+ const btns={idle:'<button class="btn primary xl-btn" data-act="runStart">Bắt đầu</button>',
+  running:'<button class="btn xl-btn" data-act="runPause">Tạm dừng</button><button class="btn danger xl-btn" data-act="runFinish">Kết thúc</button>',
+  paused:'<button class="btn primary xl-btn" data-act="runResume">Tiếp tục</button><button class="btn danger xl-btn" data-act="runFinish">Kết thúc</button>'}[st];
+ return `<section class="runner ${st}">
+ <select data-on="runEx" ${r?'disabled':''} aria-label="Bộ môn">${timeEx.concat(r&&!timeEx.includes(e)?[e]:[]).map(x=>`<option value="${x.id}" ${x.id===e.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
+ <div id="clock" class="num clock" aria-live="off">${mmss(elapsed(r))}</div>
+ <p class="target">${tg!=null?`${ti.hold?'Giữ mức hôm nay':'Mục tiêu hôm nay'}: <b class="num">${mmss(tg*60)}</b>`:'Buổi đầu tiên: chạy thoải mái để đặt mốc'}${done?`<br><span class="muted small">Đã ghi hôm nay: ${mmss(done*60)}</span>`:''}</p>
+ ${tg!=null?`<div class="bar"><i id="bar" data-tg="${tg}" data-done="${done}" style="width:${Math.min(100,(elapsed(r)/60+done)/tg*100)}%"></i></div>`:''}
+ <div class="run-btns">${btns}</div>
+ <label class="switch"><input type="checkbox" data-on="wake" ${D.settings.wakeLock?'checked':''}> Giữ màn hình sáng khi đang chạy</label>
+ <label class="switch"><input type="checkbox" data-on="sound" ${D.settings.targetSound?'checked':''}> Âm báo khi đạt mục tiêu</label>
+ <p class="muted small">Đồng hồ tính theo mốc giờ thực: khóa máy hoặc đóng app, mở lại vẫn đúng thời gian.</p></section>`;}
+let actx=null;
+function audioInit(){try{if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();}catch(e){actx=null;}}
+function beep(){if(!actx)return;const t0=actx.currentTime;[0,.25,.5].forEach((o,i)=>{const g=actx.createGain(),os=actx.createOscillator();os.type='sine';os.frequency.value=i===2?1175:880;g.gain.setValueAtTime(0,t0+o);g.gain.linearRampToValueAtTime(.4,t0+o+.02);g.gain.exponentialRampToValueAtTime(.001,t0+o+.22);os.connect(g);g.connect(actx.destination);os.start(t0+o);os.stop(t0+o+.24);});}
+function checkAlert(){const r=runState();if(!r||r.pauseAt||r.alertAt==null||r.alerted)return;const s=elapsed(r);if(s<r.alertAt)return;
+ r.alerted=true;setRun(r);if(D.settings.targetSound&&s-r.alertAt<15)beep();if(navigator.vibrate)navigator.vibrate([200,100,200]);toast('Đạt mục tiêu hôm nay. Chạy thêm là vượt mốc!');}
+function tick(){checkAlert();const c=$('#clock');if(!c)return;const s=elapsed(runState());c.textContent=mmss(s);const b=$('#bar');if(b)b.style.width=Math.min(100,(s/60+Number(b.dataset.done))/Number(b.dataset.tg)*100)+'%';}
+let wl=null;
+async function wakeOn(){if(!('wakeLock' in navigator)||!D.settings.wakeLock||wl)return;try{wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null;});}catch(e){wl=null;}}
+function wakeOff(){if(wl){wl.release().catch(()=>{});wl=null;}}
+
+/* ---------- Lịch sử & Cài đặt ---------- */
+function vHist(){const byD={},rs=restSet();for(const l of D.logs)(byD[l.date]=byD[l.date]||[]).push(l);for(const d of rs)if(!byD[d])byD[d]=[];const ds=Object.keys(byD).sort().reverse();
+ if(!ds.length)return '<p class="empty">Chưa có buổi tập nào. Bắt đầu ở tab Ghi nhận.</p>'+weightHist();
+ return ds.slice(0,histLimit).map(d=>{if(!byD[d].length)return `<section class="card restbar on"><div><h2>${fmtDate(d)}/${d.slice(0,4)}</h2><p class="muted small">Ngày nghỉ chủ động</p></div><button class="btn sm" data-act="restToggle" data-date="${d}">Bỏ ngày nghỉ</button></section>`;const ls=byD[d].sort((a,b)=>a.updatedAt-b.updatedAt),k=sum(ls.map(kcalOf)),m=sum(ls.map(l=>l.durationSec))/60;
+  return `<section class="card"><div class="row-between"><h2>${fmtDate(d)}/${d.slice(0,4)}</h2><span class="muted small">${fmt(m)} phút, ${fmt(k)} kcal</span></div><ul class="logs">${ls.map(l=>{const e=exById(l.exerciseId);
+   return `<li><div><b>${esc(e?e.name:'Môn không còn')}</b><span class="muted">${logText(e,l)}</span></div><span class="kc num">${fmt(kcalOf(l))} kcal</span><button class="btn sm" data-act="editLog" data-id="${l.id}">Sửa</button><button class="btn sm danger" data-act="delLog" data-id="${l.id}">Xóa</button></li>`;}).join('')}</ul></section>`;}).join('')
+  +(ds.length>histLimit?'<button class="btn full" data-act="histMore">Xem thêm</button>':'')+weightHist();}
+function weightHist(){if(!D.weights.length)return '';const ws=[...D.weights].sort((a,b)=>a.date<b.date?1:-1);
+ return `<section class="card"><h2>Lịch sử cân nặng</h2><ul class="exlist">${ws.map(w=>`<li><div><b class="num">${fmt(w.kg,1)} kg</b><span class="muted">${fmtDate(w.date)}/${w.date.slice(0,4)}</span></div><span></span><button class="btn sm danger" data-act="delWeight" data-id="${w.id}">Xóa</button></li>`).join('')}</ul></section>`;}
+function profileFields(p,withW){return `<div class="two"><label class="fld">Giới tính<select id="p-sex"><option value="nam" ${p.sex==='nam'?'selected':''}>Nam</option><option value="nu" ${p.sex==='nu'?'selected':''}>Nữ</option></select></label><label class="fld">Năm sinh<input type="number" inputmode="numeric" id="p-by" value="${p.birthYear||''}" placeholder="1990"></label></div>
+ <div class="two"><label class="fld">Chiều cao (cm)<input type="number" inputmode="decimal" id="p-h" value="${p.heightCm||''}" placeholder="168"></label>${withW?'<label class="fld">Cân nặng (kg)<input type="number" inputmode="decimal" step="0.1" id="p-w" placeholder="77"></label>':''}</div>`;}
+function readProfile(){const by=Number($('#p-by').value),h=Number($('#p-h').value),y=new Date().getFullYear();
+ if(!(by>1920&&by<=y-10)){toast('Năm sinh chưa hợp lệ');return null;}if(!(h>=100&&h<=250)){toast('Chiều cao nhập từ 100 đến 250 cm');return null;}
+ return {sex:$('#p-sex').value,birthYear:by,heightCm:h,updatedAt:now()};}
+function vSet(){const p=D.profile||{},tok=localStorage.getItem(TOKKEY),gid=localStorage.getItem(GISTKEY)||'',ls=Number(localStorage.getItem(LASTSYNC))||0;
+ return `<section class="card"><h2>Hồ sơ</h2>${profileFields(p,false)}<button class="btn primary full" data-act="profileSave">Lưu hồ sơ</button></section>
+ <section class="card"><div class="row-between"><h2>Cân nặng</h2><button class="btn sm" data-act="weightOpen">Cập nhật</button></div><p>Hiện tại: <b class="num">${fmt(weightAt(today()),1)}</b> kg</p></section>
+ <section class="card"><div class="row-between"><h2>Bộ môn</h2><button class="btn sm" data-act="exAdd">Thêm bộ môn</button></div><ul class="exlist">${D.exercises.map(e=>`<li class="${e.hidden?'off':''}"><div><b>${esc(e.name)}</b><span class="muted">${e.type==='reps'?'Số lần':'Thời gian'}, MET ${e.intensities?Object.values(e.intensities).join('/'):e.met}, +${fv(e,e.increment)} ${unit(e)}/buổi</span></div><button class="btn sm" data-act="exEdit" data-id="${e.id}">Sửa</button><button class="btn sm" data-act="exHide" data-id="${e.id}">${e.hidden?'Hiện':'Ẩn'}</button></li>`).join('')}</ul></section>
+ <section class="card"><h2>Mục tiêu tuần</h2><div class="two"><label class="fld">Phút vận động mỗi tuần<input type="number" inputmode="numeric" id="goal" value="${D.settings.weeklyGoalMin}" min="10"></label><button class="btn" data-act="goalSave">Lưu</button></div><p class="muted small">WHO khuyến nghị tối thiểu 150 phút vận động vừa mỗi tuần.</p></section>
+ <section class="card"><h2>Nhắc tập hằng ngày</h2><div class="two"><label class="fld">Giờ nhắc<input type="time" id="rem" value="${D.settings.reminderTime}" data-on="remTime"></label><button class="btn primary" data-act="reminderICS">Thêm vào Lịch</button></div>
+ <p class="muted small">Tạo sự kiện lặp mỗi ngày có chuông trong Lịch iPhone. Bấm vào sự kiện để mở app. Đổi giờ: xóa sự kiện cũ trong Lịch rồi tạo lại.</p></section>
+ <section class="card"><h2>Mục tiêu tự động</h2><label class="switch" style="justify-content:flex-start"><input type="checkbox" data-on="hold" ${D.settings.holdRule?'checked':''}> Giữ mức khi 2 buổi liên tiếp chưa đạt</label><p class="muted small">Bật: chưa đạt 2 buổi liền thì buổi sau giữ bằng kết quả gần nhất, đạt lại mới tăng tiếp.</p></section>
+ <section class="card"><h2>Đồng bộ GitHub</h2>
+ <label class="fld">Personal Access Token (chỉ quyền gist)<input type="password" id="tok" autocomplete="off" placeholder="${tok?'Đã lưu, kết thúc bằng '+esc(tok.slice(-4)):'ghp_… hoặc github_pat_…'}"></label>
+ <label class="fld">Gist ID (để trống để app tự tạo)<input id="gid" value="${esc(gid)}" autocomplete="off" autocapitalize="off"></label>
+ <div class="two"><button class="btn" data-act="tokenSave">Lưu cài đặt</button><button class="btn primary" data-act="syncNow">Đồng bộ ngay</button></div>
+ <p class="muted small">${ls?'Đồng bộ gần nhất: '+new Date(ls).toLocaleString('vi-VN'):'Chưa đồng bộ lần nào'}${localStorage.getItem(DIRTY)?'. Có thay đổi đang chờ đồng bộ.':''}</p>
+ ${tok?'<button class="btn sm danger" data-act="tokenClear">Xóa token khỏi máy</button>':''}</section>
+ <section class="card"><h2>Sao lưu</h2><div class="two"><button class="btn" data-act="exportJSON">Xuất file JSON</button><button class="btn" data-act="importJSON">Nhập file JSON</button></div></section>
+ <p class="muted small center">Calo là số ước tính theo Compendium of Physical Activities:<br>kcal = MET × 3,5 × kg ÷ 200 × phút.</p>`;}
+function exForm(e){const x=e||{name:'',type:'reps',met:5,secPerRep:2,increment:1};
+ return `<h2>${e?'Sửa bộ môn':'Thêm bộ môn'}</h2>${e?'':`<p class="muted small">Chọn nhanh, sửa lại được</p><div class="chips">${MET_PRESETS.map((p,i)=>`<button class="chip" data-act="preset" data-i="${i}">${p[0]} (MET ${p[1]})</button>`).join('')}</div>`}
+ <label class="fld">Tên bộ môn<input id="x-name" value="${esc(x.name)}"></label>
+ <div class="two"><label class="fld">Loại${e?' (không đổi được)':''}<select id="x-type" ${e?'disabled':''}><option value="reps" ${x.type==='reps'?'selected':''}>Số lần</option><option value="time" ${x.type==='time'?'selected':''}>Thời gian</option></select></label>
+ <label class="fld">MET<input type="number" inputmode="decimal" step="0.1" id="x-met" value="${x.met}" ${x.intensities?'disabled':''}></label></div>
+ <div class="two"><label class="fld">Giây mỗi lần (loại Số lần)<input type="number" inputmode="decimal" step="0.5" id="x-spr" value="${x.secPerRep}"></label><label class="fld">Tăng mỗi buổi (lần hoặc phút)<input type="number" inputmode="decimal" step="0.5" id="x-inc" value="${x.increment}"></label></div>
+ ${x.intensities?`<p class="muted small">MET theo cường độ: ${Object.entries(x.intensities).map(([k,v])=>k+' '+v).join(', ')}</p>`:''}
+ <div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="exSave" data-id="${e?e.id:''}">Lưu bộ môn</button></div>`;}
+function onboard(){openModal(`<h2>Bắt đầu với Thêm 1</h2><p class="muted small">Dùng để tính calo, BMI và BMR. Sửa lại được trong Cài đặt.</p>${profileFields({sex:'nam'},true)}<button class="btn primary full" data-act="onboardSave">Bắt đầu</button>
+ <details><summary>Đã có dữ liệu? Khôi phục</summary><label class="fld">GitHub token<input type="password" id="r-tok" autocomplete="off"></label><label class="fld">Gist ID<input id="r-gid" autocomplete="off" autocapitalize="off"></label><button class="btn full" data-act="restoreGist">Khôi phục từ GitHub</button><button class="btn full" data-act="importJSON">Khôi phục từ file JSON</button></details>`,true);}
+
+/* ---------- Modal & thông báo ---------- */
+function openModal(html,lock){$('#sheet').innerHTML=html;const m=$('#modal');m.dataset.lock=lock?'1':'';m.classList.remove('hidden');}
+function closeModal(){$('#modal').classList.add('hidden');$('#sheet').innerHTML='';}
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2600);}
+const setBadge=t=>{$('#syncBadge').textContent=t;};
+const isEditing=()=>!$('#modal').classList.contains('hidden')||/INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName||'');
+
+/* ---------- Ghi bản ghi ---------- */
+function commitLog(l,e){const days=stats(),tg=targetFor(e.id,l.date,days),pr=prBefore(e.id,l.date,days),v=(days[l.date]&&days[l.date].ex[e.id]||0)+(e.type==='reps'?sum(l.sets):l.durationSec/60);
+ l.kcal=round1(kcalOf(l));D.logs.push(l);save();
+ toast(pr>0&&v>pr?'Kỷ lục mới: '+fv(e,v)+' '+unit(e):tg!=null&&v>=tg-1e-9?'Đạt mục tiêu. +'+fmt(l.kcal)+' kcal':'Đã lưu. +'+fmt(l.kcal)+' kcal');}
+function delRec(arr,id){D[arr]=D[arr].filter(x=>x.id!==id);D.deleted.push({id,updatedAt:now()});}
+
+const ACT={
+ tab:b=>go(b.dataset.tab),
+ closeModal:()=>closeModal(),
+ range:b=>{chartRange=Number(b.dataset.n);render();},
+ dateShift:b=>{const d=addDays(logDate,Number(b.dataset.n));logDate=d>today()?today():d;render();},
+ inc:b=>{const dr=draft[b.dataset.ex];dr.cur++;b.parentNode.querySelector('.big').textContent=dr.cur;},
+ dec:b=>{const dr=draft[b.dataset.ex];if(dr.cur>1)dr.cur--;b.parentNode.querySelector('.big').textContent=dr.cur;},
+ addSet:b=>{draft[b.dataset.ex].sets.push(draft[b.dataset.ex].cur);rerenderCard(b.dataset.ex);},
+ rmSet:b=>{draft[b.dataset.ex].sets.splice(Number(b.dataset.i),1);rerenderCard(b.dataset.ex);},
+ saveReps:b=>{const e=exById(b.dataset.ex),dr=draft[e.id],inp=$(`[data-on="setsText"][data-ex="${e.id}"]`);
+  if(inp&&inp.value.trim())dr.sets=parseSets(inp.value);if(!dr.sets.length)dr.sets=[dr.cur];
+  const m=parseFloat($('#dur-'+e.id).value),tot=sum(dr.sets);
+  commitLog({id:uid(),date:logDate,exerciseId:e.id,sets:[...dr.sets],durationSec:m>0?Math.round(m*60):tot*e.secPerRep,durEst:!(m>0),intensity:null,met:e.met,updatedAt:now()},e);
+  dr.sets=[];render();},
+ saveTime:b=>{const e=exById(b.dataset.ex),m=parseFloat($('#min-'+e.id).value);if(!(m>0))return toast('Nhập số phút');const it=e.intensities?$('#int-'+e.id).value:null;
+  commitLog({id:uid(),date:logDate,exerciseId:e.id,sets:[],durationSec:Math.round(m*60),durEst:false,intensity:it,met:it?e.intensities[it]:e.met,updatedAt:now()},e);render();},
+ toRun:b=>{if(!runState())runEx=b.dataset.ex;go('run');},
+ runStart:()=>{audioInit();const days=stats(),tg=targetFor(runEx,today(),days),done=days[today()]&&days[today()].ex[runEx]||0;
+  setRun({exId:runEx,startAt:now(),pausedMs:0,pauseAt:null,date:today(),alertAt:tg!=null&&tg>done?Math.round((tg-done)*60):null,alerted:false});wakeOn();render();},
+ runPause:()=>{const r=runState();if(!r||r.pauseAt)return;r.pauseAt=now();setRun(r);wakeOff();render();},
+ runResume:()=>{audioInit();const r=runState();if(!r)return;if(r.pauseAt){r.pausedMs+=now()-r.pauseAt;r.pauseAt=null;setRun(r);}closeModal();wakeOn();render();},
+ runFinish:()=>{const r=runState();if(!r)return;if(!r.pauseAt){r.pauseAt=now();setRun(r);}wakeOff();render();const e=exById(r.exId);
+  openModal(`<h2>Kết thúc buổi ${esc(e.name.toLowerCase())}</h2><p class="num clock sm">${mmss(elapsed(r))}</p>
+  ${e.intensities?`<p class="muted small">Chọn cường độ để lưu</p><div class="run-btns">${Object.keys(e.intensities).map(k=>`<button class="btn primary" data-act="runSave" data-int="${k}">${k}</button>`).join('')}</div>`:'<button class="btn primary full" data-act="runSave">Lưu buổi tập</button>'}
+  <div class="two"><button class="btn" data-act="runResume">Chạy tiếp</button><button class="btn danger" data-act="runDiscard">Hủy buổi</button></div>`);},
+ runSave:b=>{const r=runState();if(!r)return closeModal();const e=exById(r.exId),it=b.dataset.int||null;
+  commitLog({id:uid(),date:r.date,exerciseId:e.id,sets:[],durationSec:Math.round(elapsed(r)),durEst:false,intensity:it,met:it?e.intensities[it]:e.met,updatedAt:now()},e);setRun(null);closeModal();render();},
+ runDiscard:()=>{if(!confirm('Hủy buổi này? Thời gian sẽ không được lưu.'))return;setRun(null);closeModal();render();},
+ editLog:b=>{const l=D.logs.find(x=>x.id===b.dataset.id),e=exById(l.exerciseId);if(!e)return;
+  openModal(`<h2>Sửa: ${esc(e.name)}</h2><label class="fld">Ngày<input type="date" id="ed-date" value="${l.date}" max="${today()}"></label>
+  ${e.type==='reps'?`<label class="fld">Các hiệp<input id="ed-sets" inputmode="numeric" value="${l.sets.join('-')}"></label><label class="fld">Thời gian thực tế (phút, không bắt buộc)<input type="number" inputmode="decimal" step="0.5" id="ed-min" value="${l.durEst?'':round1(l.durationSec/60)}"></label>`
+  :`<label class="fld">Thời gian (phút)<input type="number" inputmode="decimal" step="0.1" id="ed-min" value="${round1(l.durationSec/60)}"></label>${e.intensities?`<label class="fld">Cường độ<select id="ed-int">${Object.keys(e.intensities).map(k=>`<option ${k===l.intensity?'selected':''}>${k}</option>`).join('')}</select></label>`:''}`}
+  <div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="saveEdit" data-id="${l.id}">Lưu thay đổi</button></div>`);},
+ saveEdit:b=>{const l=D.logs.find(x=>x.id===b.dataset.id),e=exById(l.exerciseId),m=parseFloat($('#ed-min').value);
+  if(e.type==='reps'){const s=parseSets($('#ed-sets').value);if(!s.length)return toast('Nhập ít nhất 1 hiệp');l.sets=s;l.durEst=!(m>0);l.durationSec=m>0?Math.round(m*60):sum(s)*e.secPerRep;}
+  else{if(!(m>0))return toast('Nhập số phút');l.durationSec=Math.round(m*60);if(e.intensities){l.intensity=$('#ed-int').value;l.met=e.intensities[l.intensity];}}
+  const d=$('#ed-date').value;if(d&&d<=today())l.date=d;l.updatedAt=now();l.kcal=round1(kcalOf(l));save();closeModal();render();toast('Đã lưu thay đổi');},
+ delLog:b=>{if(!confirm('Xóa bản ghi này?'))return;delRec('logs',b.dataset.id);save();render();toast('Đã xóa');},
+ histMore:()=>{histLimit+=30;render();},
+ weightOpen:()=>openModal(`<h2>Cập nhật cân nặng</h2><div class="two"><label class="fld">Ngày<input type="date" id="w-date" value="${today()}" max="${today()}"></label><label class="fld">Cân nặng (kg)<input type="number" inputmode="decimal" step="0.1" id="w-kg" value="${weightAt(today())||''}"></label></div>
+  <p class="muted small">Calo từ ngày này trở đi tính theo cân nặng mới. Bản ghi trước đó giữ nguyên.</p><div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="weightSave">Lưu cân nặng</button></div>`),
+ weightSave:()=>{const kg=parseFloat($('#w-kg').value),d=$('#w-date').value||today();if(!(kg>=20&&kg<=300))return toast('Cân nặng nhập từ 20 đến 300 kg');
+  const ex=D.weights.find(w=>w.date===d);if(ex){ex.kg=kg;ex.updatedAt=now();}else D.weights.push({id:uid(),date:d,kg,updatedAt:now()});
+  save();closeModal();render();toast('Đã cập nhật '+fmt(kg,1)+' kg từ '+fmtDate(d));},
+ delWeight:b=>{if(D.weights.length<=1)return toast('Cần giữ ít nhất 1 mốc cân nặng');if(!confirm('Xóa mốc cân nặng này?'))return;delRec('weights',b.dataset.id);save();render();},
+ profileSave:()=>{const p=readProfile();if(!p)return;D.profile=p;save();toast('Đã lưu hồ sơ');render();},
+ onboardSave:()=>{const p=readProfile();if(!p)return;const w=parseFloat($('#p-w').value);if(!(w>=20&&w<=300))return toast('Cân nặng nhập từ 20 đến 300 kg');
+  D.profile=p;D.weights.push({id:uid(),date:today(),kg:w,updatedAt:now()});save();closeModal();render();},
+ restoreGist:async()=>{const t=$('#r-tok').value.trim(),g=$('#r-gid').value.trim();if(!t||!g)return toast('Nhập token và Gist ID');
+  localStorage.setItem(TOKKEY,t);localStorage.setItem(GISTKEY,g);await sync(true);if(D.profile){closeModal();render();}},
+ exAdd:()=>openModal(exForm(null)),
+ exEdit:b=>openModal(exForm(exById(b.dataset.id))),
+ preset:b=>{const p=MET_PRESETS[Number(b.dataset.i)];$('#x-name').value=p[0];$('#x-met').value=p[1];$('#x-type').value=p[2];$('#x-spr').value=p[3]||2;},
+ exSave:b=>{const name=$('#x-name').value.trim(),met=parseFloat($('#x-met').value),spr=parseFloat($('#x-spr').value)||0,inc=parseFloat($('#x-inc').value),id=b.dataset.id,e=id&&exById(id);
+  if(!name)return toast('Nhập tên bộ môn');if(!(e&&e.intensities)&&!(met>0))return toast('MET phải lớn hơn 0');if(!(inc>0))return toast('Mức tăng phải lớn hơn 0');
+  const type=e?e.type:$('#x-type').value;if(type==='reps'&&!(spr>0))return toast('Nhập số giây mỗi lần');
+  if(e){e.name=name;if(!e.intensities)e.met=met;e.secPerRep=spr;e.increment=inc;e.updatedAt=now();}
+  else D.exercises.push({id:uid(),name,type,met,secPerRep:type==='reps'?spr:0,increment:inc,hidden:false,updatedAt:now()});
+  save();closeModal();render();toast('Đã lưu bộ môn');},
+ exHide:b=>{const e=exById(b.dataset.id);e.hidden=!e.hidden;e.updatedAt=now();save();render();},
+ goalSave:()=>{const v=Number($('#goal').value);if(!(v>=10))return toast('Mục tiêu tối thiểu 10 phút');D.settings.weeklyGoalMin=v;D.settings.updatedAt=now();save();toast('Đã lưu mục tiêu tuần');},
+ tokenSave:()=>{const t=$('#tok').value.trim(),g=$('#gid').value.trim();if(t)localStorage.setItem(TOKKEY,t);g?localStorage.setItem(GISTKEY,g):localStorage.removeItem(GISTKEY);toast('Đã lưu cài đặt đồng bộ');render();},
+ syncNow:()=>sync(true),
+ tokenClear:()=>{if(!confirm('Xóa token khỏi máy này?'))return;localStorage.removeItem(TOKKEY);render();},
+ exportJSON:()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(D,null,1)],{type:'application/json'}));a.download='them1-'+today()+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);},
+ importJSON:()=>$('#file').click(),
+ monthShift:b=>{const [y,m]=repMonth.split('-').map(Number),n=ymd(new Date(y,m-1+Number(b.dataset.n),1)).slice(0,7);if(n<=today().slice(0,7))repMonth=n;render();},
+ restToggle:b=>{const d=b.dataset.date,ex=D.rests.find(r=>r.date===d);
+  if(ex){delRec('rests',ex.id);save();render();return toast('Đã bỏ ngày nghỉ');}
+  if(D.logs.some(l=>l.date===d))return toast('Ngày này đã có buổi tập');
+  if(restsInWeek(d,d)>=1)return toast('Tuần này đã dùng 1 ngày nghỉ');
+  D.rests.push({id:uid(),date:d,updatedAt:now()});save();render();toast('Đã đánh dấu ngày nghỉ');},
+ reminderICS:()=>{const tm=(D.settings.reminderTime||'19:00').split(':').map(Number),n=new Date(),st=new Date(n.getFullYear(),n.getMonth(),n.getDate(),tm[0],tm[1]);if(st<=n)st.setDate(st.getDate()+1);
+  const f=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00',en=new Date(st.getTime()+15*60000),u=new Date(),url=location.href.split('#')[0];
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Them1//VI','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:them1-nhac-tap@them1','DTSTAMP:'+u.toISOString().replace(/[-:]/g,'').slice(0,15)+'Z','DTSTART:'+f(st),'DTEND:'+f(en),'RRULE:FREQ=DAILY',
+   'SUMMARY:Tập Thêm 1 hôm nay','DESCRIPTION:Mở app ghi kết quả: '+url,'URL:'+url,'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Đến giờ tập. Hôm nay thêm 1 chút!','TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download='nhac-tap-them1.ics';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+  toast('Chọn "Thêm vào Lịch" để lưu nhắc lúc '+D.settings.reminderTime);}
+};
+const ON={
+ logDate:t=>{logDate=t.value&&t.value<=today()?t.value:today();render();},
+ chartEx:t=>{chartEx=t.value;render();},
+ runEx:t=>{runEx=t.value;render();},
+ setsText:t=>{draft[t.dataset.ex].sets=parseSets(t.value);rerenderCard(t.dataset.ex);},
+ sound:t=>{D.settings.targetSound=t.checked;D.settings.updatedAt=now();save();if(t.checked){audioInit();beep();}},
+ hold:t=>{D.settings.holdRule=t.checked;D.settings.updatedAt=now();save();toast(t.checked?'Đã bật giữ mức':'Đã tắt giữ mức');},
+ remTime:t=>{if(t.value){D.settings.reminderTime=t.value;D.settings.updatedAt=now();save();}},
+ wake:t=>{D.settings.wakeLock=t.checked;D.settings.updatedAt=now();save();const r=runState();t.checked&&r&&!r.pauseAt?wakeOn():wakeOff();},
+ import:t=>{const f=t.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{let R;try{R=JSON.parse(rd.result);}catch(e){R=null;}t.value='';
+  if(!R||!R.schemaVersion)return toast('File không đúng định dạng của app');if(!confirm('Gộp dữ liệu từ file vào app? Bản ghi mới hơn sẽ được giữ.'))return;
+  merge(R);save();if(D.profile)closeModal();render();toast('Đã nhập dữ liệu');};rd.readAsText(f);}
+};
+
+/* ---------- Đồng bộ GitHub Gist ---------- */
+function merge(R){if(!R||!R.schemaVersion)return;if(!Array.isArray(D.rests))D.rests=[];const tomb={};
+ for(const t of [...D.deleted,...(R.deleted||[])])if(!(tomb[t.id]>=t.updatedAt))tomb[t.id]=t.updatedAt;
+ D.deleted=Object.keys(tomb).map(id=>({id,updatedAt:tomb[id]}));
+ for(const k of ['weights','exercises','logs','rests']){const m={};for(const x of [...D[k],...(R[k]||[])]){const o=m[x.id];if(!o||(x.updatedAt||0)>(o.updatedAt||0))m[x.id]=x;}
+  D[k]=Object.values(m).filter(x=>!(tomb[x.id]>=(x.updatedAt||0)));}
+ for(const k of ['profile','settings'])if(R[k]&&(!D[k]||(R[k].updatedAt||0)>(D[k].updatedAt||0)))D[k]=R[k];migrate();}
+async function gh(path,opt={}){const r=await fetch('https://api.github.com'+path,Object.assign({},opt,{headers:{'Authorization':'Bearer '+localStorage.getItem(TOKKEY),'Accept':'application/vnd.github+json','Content-Type':'application/json'}}));
+ if(!r.ok)throw new Error(r.status===401?'Token không hợp lệ hoặc đã hết hạn':r.status===404?'Không tìm thấy Gist. Kiểm tra Gist ID và quyền gist của token':'GitHub báo lỗi '+r.status);return r.json();}
+let syncTimer=null,syncing=false;
+function scheduleSync(){clearTimeout(syncTimer);syncTimer=setTimeout(()=>sync(false),2000);}
+async function sync(manual){if(!localStorage.getItem(TOKKEY)){if(manual)toast('Chưa nhập GitHub token');return;}
+ if(!navigator.onLine){setBadge('Chờ mạng để đồng bộ');if(manual)toast('Đang offline. App sẽ tự đồng bộ khi có mạng.');return;}
+ if(syncing)return;syncing=true;setBadge('Đang đồng bộ…');
+ try{const id=localStorage.getItem(GISTKEY);
+  if(id){const g=await gh('/gists/'+id),f=g.files&&g.files[GFILE];if(f){const txt=f.truncated?await (await fetch(f.raw_url)).text():f.content;merge(JSON.parse(txt));}
+   await gh('/gists/'+id,{method:'PATCH',body:JSON.stringify({files:{[GFILE]:{content:JSON.stringify(D)}}})});}
+  else{const g=await gh('/gists',{method:'POST',body:JSON.stringify({description:'Thêm 1 – dữ liệu tập luyện',public:false,files:{[GFILE]:{content:JSON.stringify(D)}}})});localStorage.setItem(GISTKEY,g.id);}
+  save(false);localStorage.removeItem(DIRTY);localStorage.setItem(LASTSYNC,String(now()));setBadge('');if(manual)toast('Đã đồng bộ');if(!isEditing())render();
+ }catch(e){setBadge('Chưa đồng bộ được');if(manual)toast(e.message||'Không kết nối được GitHub');}finally{syncing=false;}}
+
+/* ---------- Khởi động ---------- */
+function makeAppleIcon(){try{const c=document.createElement('canvas');c.width=c.height=180;const x=c.getContext('2d');
+ x.fillStyle='#0E7C86';x.fillRect(0,0,180,180);x.fillStyle='#fff';x.fillRect(28,82,58,16);x.fillRect(49,61,16,58);
+ x.fillRect(112,46,18,88);x.beginPath();x.moveTo(116,46);x.lineTo(116,66);x.lineTo(94,77);x.lineTo(94,58);x.closePath();x.fill();
+ $('#appleIcon').href=c.toDataURL('image/png');}catch(e){}}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const f=ACT[b.dataset.act];if(f){e.preventDefault();f(b,e);}});
+document.addEventListener('change',e=>{const t=e.target,k=t.dataset&&t.dataset.on;if(k&&ON[k])ON[k](t);});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!$('#modal').dataset.lock)closeModal();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){tick();const r=runState();if(r&&!r.pauseAt)wakeOn();}});
+window.addEventListener('online',()=>{if(localStorage.getItem(DIRTY))sync(false);setBadge('');});
+window.addEventListener('storage',e=>{if(e.key===KEY){load();if(!isEditing())render();}});
+setInterval(tick,250);
+load();makeAppleIcon();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+go(runState()?'run':'dash');
+if(!D.profile)onboard();
+if(localStorage.getItem(TOKKEY))sync(false);
+{const r=runState();if(r&&!r.pauseAt)wakeOn();}
+</script>
+</body>
+</html>

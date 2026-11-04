@@ -1,0 +1,13 @@
+{
+  "name": "Thêm 1 – Nhật ký tập",
+  "short_name": "Thêm 1",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EEF2F3",
+  "theme_color": "#0E7C86",
+  "lang": "vi",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
