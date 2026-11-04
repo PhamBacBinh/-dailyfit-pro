@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0E7C86">
+<meta name="theme-color" content="#111111">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -13,8 +13,8 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" id="appleIcon" href="icon.svg">
 <style>
-:root{--bg:#EEF2F3;--surface:#fff;--ink:#16232B;--muted:#5E6E78;--line:#D6DEE2;--accent:#0E7C86;--on-accent:#fff;--soft:#DCEDEE;--gold:#B8740A;--gold-soft:#FBEBCB;--danger:#B42318;--h0:#E1E7EA;--h1:#B4DCDF;--h2:#6FBFC6;--h3:#2E9AA4;--h4:#0B5F67;--num:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;color-scheme:light dark}
-@media (prefers-color-scheme:dark){:root{--bg:#0E1A1F;--surface:#15242B;--ink:#E4ECEE;--muted:#8FA2AB;--line:#263A42;--accent:#2BB3BE;--on-accent:#06262A;--soft:#173840;--gold:#F2B441;--gold-soft:#3A2E14;--danger:#F97066;--h0:#1C2D34;--h1:#1D4C53;--h2:#1F7480;--h3:#2BA0AC;--h4:#6FD6DE}}
+:root{--bg:#F4F4F4;--surface:#fff;--ink:#111111;--muted:#6B6B6B;--line:#E2E2E2;--accent:#D7262E;--on-accent:#fff;--soft:#FBE3E4;--gold:#8C1218;--gold-soft:#FBE3E4;--danger:#D7262E;--hero:#111111;--hero-line:#333;--hero-sub:#BDBDBD;--hero-red:#FF3B44;--h0:#EDEDED;--h1:#F3C2C4;--h2:#E5767B;--h3:#D7262E;--h4:#8C1218;--num:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0B0B0B;--surface:#171717;--ink:#F2F2F2;--muted:#9A9A9A;--line:#2A2A2A;--accent:#FF3B44;--on-accent:#fff;--soft:#3A1416;--gold:#FF6A70;--gold-soft:#3A1416;--danger:#FF3B44;--hero:#171717;--hero-line:#2A2A2A;--hero-sub:#9A9A9A;--hero-red:#FF3B44;--h0:#222222;--h1:#4A1418;--h2:#8E1D23;--h3:#D7262E;--h4:#FF6A70}}
 *{box-sizing:border-box;margin:0}
 html{-webkit-text-size-adjust:100%}
 body{font:16px/1.45 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top) 0 calc(80px + env(safe-area-inset-bottom));min-height:100vh}
@@ -28,13 +28,13 @@ h2{font-size:17px;font-weight:650}
 .muted{color:var(--muted)}.small{font-size:13px}.center{text-align:center;padding:8px 0 16px}
 .row-between{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
-.hero{background:var(--accent);color:var(--on-accent);border-radius:22px;padding:20px 18px 16px;display:grid;gap:14px}
+.hero{background:var(--hero);color:#fff;border:1px solid var(--hero-line);border-radius:22px;padding:20px 18px 16px;display:grid;gap:14px}
 .hero-main{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.hero .lbl{width:100%;font-size:15px;opacity:.85}
+.hero .lbl{width:100%;font-size:15px;color:var(--hero-sub)}
 .xl{font-size:64px;line-height:1;letter-spacing:-.03em}
-.hero .u{font-size:18px;opacity:.85}
-.hero-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid rgba(255,255,255,.28);padding-top:12px}
-.hero-row b{display:block;font-size:24px}.hero-row span{font-size:12.5px;opacity:.85;line-height:1.25;display:block}
+.hero .u{font-size:18px;color:var(--hero-red);font-weight:600}.hero .red{color:var(--hero-red)}
+.hero-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--hero-line);padding-top:12px}
+.hero-row b{display:block;font-size:24px}.hero-row span{font-size:12.5px;color:var(--hero-sub);line-height:1.25;display:block}
 .week{grid-template-columns:116px 1fr;align-items:center;gap:16px}
 .ring{width:116px;height:116px}.ring-bg{fill:none;stroke:var(--soft);stroke-width:12}.ring-fg{fill:none;stroke:var(--accent);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset .6s}
 .ring-t{font-size:24px;text-anchor:middle;fill:var(--ink)}.ring-s{font-size:11px;text-anchor:middle;fill:var(--muted)}
@@ -44,8 +44,8 @@ h2{font-size:17px;font-weight:650}
 .legend{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);justify-content:flex-end;flex-wrap:wrap}
 .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
 .legend .h0{background:var(--h0)}.legend .h1{background:var(--h1)}.legend .h2{background:var(--h2)}.legend .h3{background:var(--h3)}.legend .h4{background:var(--h4)}
-.legend .lv{background:var(--accent);height:3px;width:16px;margin-left:8px}.legend .lt{border-top:2px dashed var(--gold);height:0;width:16px;border-radius:0;margin-left:8px}
-.gl{stroke:var(--line);stroke-width:1}.val{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}.val-d{fill:var(--accent)}.tg{fill:none;stroke:var(--gold);stroke-width:1.5;stroke-dasharray:4 4}
+.legend .lv{background:var(--accent);height:3px;width:16px;margin-left:8px}.legend .lt{border-top:2px dashed var(--ink);height:0;width:16px;border-radius:0;margin-left:8px}
+.gl{stroke:var(--line);stroke-width:1}.val{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}.val-d{fill:var(--accent)}.tg{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-dasharray:4 4}
 .seg{display:flex;background:var(--bg);border-radius:10px;padding:3px}.seg button{flex:1;min-height:36px;border:0;background:none;color:var(--muted);border-radius:8px;font:inherit;font-size:14px}.seg .on{background:var(--surface);color:var(--ink);font-weight:600}
 .pr,.logs,.exlist{list-style:none;padding:0;display:grid}
 .pr li{display:grid;grid-template-columns:1fr auto;gap:0 8px;padding:8px 0;border-top:1px solid var(--line)}.pr li:first-child{border-top:0}.pr small{color:var(--muted);text-align:right}.pr b{text-align:right}.pr li small:nth-child(3){grid-column:2}
@@ -179,7 +179,7 @@ function vDash(){const days=stats(),t=today(),td=days[t]||{ex:{},kcal:0,min:0},v
  if(!chartEx||!vis.some(e=>e.id===chartEx))chartEx=vis[0]&&vis[0].id;
  return `<section class="hero">
   <div class="hero-main"><span class="lbl">Hôm nay tiêu hao</span><b class="num xl">${fmt(td.kcal)}</b><span class="u">kcal</span></div>
-  <div class="hero-row"><div><b class="num">${fmt(td.min)}</b><span>phút vận động</span></div><div><b class="num">${done}/${vis.length}</b><span>môn đạt mục tiêu</span></div><div><b class="num">${st.cur}</b><span>ngày liên tiếp</span></div></div>
+  <div class="hero-row"><div><b class="num">${fmt(td.min)}</b><span>phút vận động</span></div><div><b class="num">${done}/${vis.length}</b><span>môn đạt mục tiêu</span></div><div><b class="num red">${st.cur}</b><span>ngày liên tiếp</span></div></div>
  </section>
  <section class="card week">
   <svg viewBox="0 0 120 120" class="ring" role="img" aria-label="Tiến độ tuần ${Math.round(p*100)}%"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring-fg" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}" transform="rotate(-90 60 60)"/><text x="60" y="62" class="num ring-t">${Math.round(p*100)}%</text><text x="60" y="80" class="ring-s">tuần này</text></svg>
@@ -489,7 +489,7 @@ async function sync(manual){if(!localStorage.getItem(TOKKEY)){if(manual)toast('C
 
 /* ---------- Khởi động ---------- */
 function drawIcon(px){const c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d'),k=px/180;x.scale(k,k);
- x.fillStyle='#0E7C86';x.fillRect(0,0,180,180);x.fillStyle='#fff';x.fillRect(28,82,58,16);x.fillRect(49,61,16,58);
+ x.fillStyle='#111111';x.fillRect(0,0,180,180);x.fillStyle='#FF3B44';x.fillRect(28,82,58,16);x.fillRect(49,61,16,58);
  x.fillRect(112,46,18,88);x.beginPath();x.moveTo(116,46);x.lineTo(116,66);x.lineTo(94,77);x.lineTo(94,58);x.closePath();x.fill();return c.toDataURL('image/png');}
 function makeAppleIcon(){try{$('#appleIcon').href=drawIcon(180);iconPNG=drawIcon(512);}catch(e){}}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const f=ACT[b.dataset.act];if(f){e.preventDefault();f(b,e);}});
