@@ -417,7 +417,7 @@ function vSet(){const p=D.profile||{},tok=localStorage.getItem(TOKKEY),gid=local
  <p class="muted small">${ls?'Đồng bộ gần nhất: '+new Date(ls).toLocaleString('vi-VN'):'Chưa đồng bộ lần nào'}${localStorage.getItem(DIRTY)?'. Có thay đổi đang chờ đồng bộ.':''}</p>
  ${tok?'<button class="btn sm danger" data-act="tokenClear">Xóa token khỏi máy</button>':''}</section>
  <section class="card"><h2>Sao lưu</h2><div class="two"><button class="btn" data-act="exportJSON">Xuất file JSON</button><button class="btn" data-act="importJSON">Nhập file JSON</button></div></section>
- <p class="muted small center">Calo là số ước tính theo Compendium of Physical Activities:<br>kcal = MET × 3,5 × kg ÷ 200 × phút.</p>`;}
+ <p class="muted small center">Phiên bản v15<br>Calo là số ước tính theo Compendium of Physical Activities:<br>kcal = MET × 3,5 × kg ÷ 200 × phút.</p>`;}
 function exForm(e){const x=e||{name:'',type:'reps',met:5,secPerRep:2,increment:1};
  return `<h2>${e?'Sửa bộ môn':'Thêm bộ môn'}</h2>${e?'':`<p class="muted small">Chọn nhanh, sửa lại được</p><div class="pgrid">${MET_PRESETS.map((p,i)=>`<button data-act="preset" data-i="${i}">${ico(p[4])}<span>${p[0]}</span><small>MET ${fmt(p[1],1)}</small></button>`).join('')}</div>`}
  <label class="fld">Tên bộ môn<input id="x-name" value="${esc(x.name)}" placeholder="Chọn ở trên hoặc bấm Gõ tên"></label><button class="btn full" data-act="askText" data-target="#x-name" data-label="Tên bộ môn mới">Gõ tên môn khác</button>
@@ -496,6 +496,7 @@ const ACT={
  personRenameOpen:()=>openModal(`<h2>Đổi tên ${esc(D.name)}</h2><label class="fld">Tên mới<select id="pn-sel">${NAME_PRESETS.map(n=>`<option ${n===D.name?'selected':''}>${n}</option>`).join('')}</select></label><input id="pn-txt" type="hidden"><button class="btn full" data-act="askText" data-target="#pn-txt" data-label="Tên mới">Gõ tên khác</button><div class="two"><button class="btn" data-act="closeModal">Hủy</button><button class="btn primary" data-act="personRename">Lưu tên</button></div>`),
  personRename:()=>{const name=($('#pn-txt').value||'').trim()||$('#pn-sel').value;D.name=name;D.nameAt=now();save();closeModal();render();toast('Đã đổi tên thành '+name);},
  personDel:()=>{const ids=Object.keys(ROOT.people);if(ids.length<2)return toast('Cần giữ ít nhất 1 người');if(!confirm('Xóa toàn bộ dữ liệu của '+D.name+'? Không khôi phục được.'))return;if(!confirm('Xác nhận lần nữa: xóa hồ sơ '+D.name+'?'))return;const id=ACTIVE,nm=D.name;ROOT.deletedPeople[id]=now();delete ROOT.people[id];localStorage.removeItem(runKey());usePerson(Object.keys(ROOT.people)[0]);save();closeModal();go('dash');toast('Đã xóa hồ sơ '+nm);},
+ reloadApp:()=>{if(runState())return toast('Kết thúc buổi chạy trước khi cập nhật');location.reload();},
  askText:b=>{const i=$(b.dataset.target);if(!i)return;const v=prompt(b.dataset.label||'Nhập',i.value||'');if(v==null)return;i.value=v.trim();i.dispatchEvent(new Event('change',{bubbles:true}));if(v.trim())toast('Đã nhập: '+v.trim());},
  edAddSet:()=>{const c=$('#ed-sets'),last=[...c.querySelectorAll('.ed-set')].pop();c.insertAdjacentHTML('beforeend',`<select class="ed-set" style="width:auto">${opts(1,300,1,last?Number(last.value):10,0)}</select>`);},
  edRmSet:()=>{const a=[...document.querySelectorAll('.ed-set')];if(a.length>1)a.pop().remove();else toast('Cần ít nhất 1 hiệp');},
@@ -602,7 +603,8 @@ window.addEventListener('online',()=>{if(localStorage.getItem(DIRTY))sync(false)
 window.addEventListener('storage',e=>{if(e.key===KEY){load();if(!isEditing())render();}});
 setInterval(tick,250);
 load();makeAppleIcon();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
+if('serviceWorker' in navigator){const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!$('#upd'))document.body.insertAdjacentHTML('beforeend','<button id="upd" class="btn primary" data-act="reloadApp" style="position:fixed;left:16px;right:16px;top:calc(12px + env(safe-area-inset-top));z-index:50">Có bản mới. Bấm để cập nhật</button>');});
+ navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{r.update();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')r.update().catch(()=>{});});}).catch(()=>{});}
 go(runState()?'run':'dash');
 if(localStorage.getItem(TOKKEY))sync(false);
 {const r=runState();if(r&&!r.pauseAt)wakeOn();}
